@@ -1,74 +1,57 @@
 # Cloudboard
 
-Create Pinterest-style image boards with four fixed columns — local photos, vault images and online images in one place. No Canvas and no Pinterest login required.
+**Create Pinterest-style image boards with four fixed columns, mixing local photos, vault images, direct online images and public Pinterest pin previews. No Canvas and no Pinterest login required.**
 
-## ⚒️ Features
+Every board is stored as a dedicated `.pboard` file. Your original Markdown note is never modified.
 
-- Four fixed image columns with rounded cards and an empty **+** frame in every column.
-- Add photos **from your device**, **from your vault**, as a **direct HTTPS image** or as a **public Pinterest pin preview**.
-- Captions can be edited with the pencil or cleared completely; source links stay hidden.
-- Optional caption bar: turn it off to show only the photo, with edit and delete actions appearing on hover or tap.
-- Reorder cards with drag and drop — across columns too. On touch screens, hold a card for a moment and drag. Keyboard users can focus a card and move it with the arrow keys.
-- Click an image for a large preview. Removing a card **never deletes the image file** from your vault.
-- Your boards live in a dedicated `.pboard` file, not in a Canvas. The original note is never changed.
-- Existing Canvas boards can be converted into an image board without modifying the source Canvas.
-- Interface available in **English (default), German, Spanish and French**.
-- Online images stay online; they are not downloaded into your vault.
+## 💡 How it works
 
-## 🤔 How to use Cloudboard
+- Convert a Markdown note to create `<note name> Board.pboard`. The new view has four fixed columns, each with a **+** frame for adding more images.
+- Add photos **from your device**, **from your vault**, as a **direct HTTPS image** or as a **public Pinterest pin preview**. Device photos are copied into the vault using Obsidian's attachment settings; vault images are embedded without duplication.
+- Online images stay online and are not downloaded into your vault. They need an internet connection and can disappear if the image host removes them.
+- Click an image for a large preview. The pencil edits the caption; clearing the caption hides it. Source links are stored internally but never shown.
+- With the caption bar enabled, captions and actions appear below the photo. Turn it off to show only the photo, with edit and delete actions appearing on hover or tap.
+- Drag cards to reorder them within a column or move them to another column. On touch screens, hold a card for a moment and drag. Keyboard users can focus a card and move it with the arrow keys.
+- The trash icon removes a card from the board, **never the image file** from your vault.
+- The board keeps all four columns on narrow screens and scrolls horizontally instead of switching to fewer columns.
+- Existing Canvas boards can be converted with **Import as an image board**. The original `.canvas` file stays unchanged.
+- The interface is available in **English (default), German, Spanish and French**. Switching the language updates open boards and command names; your own captions and notes are never translated.
+- The older Pinterest-to-Canvas importer remains available for public boards. Pinterest may block previews even for public pins; in that case, copy the direct image address (`https://i.pinimg.com/...`) instead of the pin page URL.
+- Cloudboard is not affiliated with Pinterest. Image rights remain with their respective owners.
 
-| Action                | How                                                                                                                                         |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Create a board        | Right-click a Markdown note → *Convert note into an image board*. Cloudboard creates `<note name> Board.pboard` and opens it automatically. |
-| Create an empty board | With no Markdown note active, click the *New image board* ribbon icon.                                                                      |
-| Add images            | Click the **+** in a column → *Choose from device*, *Choose from vault* or paste an *Internet link*.                                          |
-| Add a Pinterest pin   | Paste a full pin link such as `https://www.pinterest.com/pin/123456789/` and let Cloudboard use its public preview image.                     |
-| Edit a caption        | Click the pencil below the image, or on the image itself when the caption bar is hidden.                                                     |
-| Remove a card         | Click the trash icon. The image file remains in your vault.                                                                                 |
-| Reorder cards         | Drag a card on desktop; long-press and drag on touch; focus a card and use the arrow keys on a keyboard.                                    |
-| Preview an image      | Click the image.                                                                                                                            |
-| Convert an old Canvas | Right-click a `.canvas` file → *Import as an image board*. The original Canvas stays unchanged.                                              |
+## ⚙️ Settings and commands
+
+- **Language**: choose English, German, Spanish or French.
+- **Show caption bar**: show captions and actions below the photo, or hide the bar and reveal actions on hover/tap.
+- **Cloudboard: Convert note into an image board**: right-click a Markdown note or use the Command Palette. With no Markdown note active, the **New image board** ribbon icon creates an empty board.
+- **Cloudboard: Add image to board**: right-click a `.pboard` file or use the Command Palette to open the image picker.
+- **Cloudboard: Convert existing Canvas into an image board**: right-click a `.canvas` file or use the Command Palette. The source Canvas is not modified.
+- **Sync interval**, **Save images locally** and **Sync now** apply only to the older Canvas importer. **Legacy: Import Pinterest board as Canvas** and **Sync Pinterest Canvases** remain available for that workflow.
+- Supported local formats: JPG/JPEG, PNG, GIF, WebP, AVIF and BMP, up to 25 MB per image. HEIC and SVG are not supported.
 
 ## 💻 Installation
 
-Requires **Obsidian 1.5.7 or newer**. Cloudboard is not yet listed in the official Community plugins directory.
+Requires **Obsidian 1.5.7 or newer**.
 
-- **via GitHub release:**
-  - Open the [latest release](https://github.com/finnxwz/cloudboard/releases/latest).
-  - Copy `main.js`, `manifest.json` and `styles.css` into `<your vault>/.obsidian/plugins/cloudboard/`.
-  - Reload Obsidian and enable **Cloudboard** under *Settings → Community plugins*.
-- **via BRAT:**
-  - Install [BRAT](https://github.com/TfTHacker/obsidian42-brat), then run *Add Beta plugin* and enter `finnxwz/cloudboard`.
-- **from source:**
-  - Run `npm install`, `npm test` and `npm run build`, then copy the three files above into the plugin folder.
+**directly in Obsidian:**
+- Cloudboard is not yet in the official Community plugins directory. Once listed, install it via Settings → Community plugins → Browse → search for **Cloudboard** → *Install* → **Enable**.
 
-## ⚙️ Settings
+**via GitHub:**
+- Download `manifest.json`, `main.js` and `styles.css` from the [latest release](https://github.com/finnxwz/cloudboard/releases/latest).
+- Copy them into `<your vault>/.obsidian/plugins/cloudboard/`.
+- Reload Obsidian and enable **Cloudboard** under *Settings → Community plugins*.
 
-| Setting             | What it does                                                                                                                       |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Language            | Switches the plugin interface between English, German, Spanish and French. Your own captions and notes are never translated.       |
-| Show caption bar    | Shows captions and actions below the photo. When off, actions appear when hovering or tapping the image.                           |
-| Sync interval       | Background sync for the older Pinterest-to-Canvas import.                                                                          |
-| Save images locally | Downloads Pinterest images into the vault during the older import or sync.                                                         |
-| Sync now            | Checks all linked Canvas boards immediately. These last three settings apply only to the legacy Canvas importer.                    |
+**via BRAT:**
+- Install [BRAT](https://github.com/TfTHacker/obsidian42-brat), run *Add Beta plugin* and enter `finnxwz/cloudboard`.
 
-## 💡 Additional info
-
-- Cloudboard stores each board as a readable JSON file with a `.pboard` extension. The extension is independent of Canvas; existing boards remain compatible after the rename from **Import From Pinterest**.
-- If you previously installed the plugin under the old ID `import-from-pinterest`, install Cloudboard into the new `cloudboard` plugin folder. Old plugin settings are not migrated automatically.
-- Local images must be present in the vault or synced to your device. Online images need an internet connection and can disappear if the image host removes them.
-- Pinterest may block public pin previews even when a pin is publicly visible. In that case, open the pin in your browser and copy the direct image address (`https://i.pinimg.com/...`) instead of the pin page URL.
-- On narrow screens the board keeps all four columns and scrolls horizontally. To use local images on mobile, sync the `.pboard` file and its image attachments; online images work without local files.
-- Supported local formats: JPG/JPEG, PNG, GIF, WebP, AVIF and BMP, up to 25 MB per image. HEIC and SVG are not supported.
-- The legacy Canvas importer uses public Pinterest endpoints without a Pinterest login. Pinterest can change or restrict these endpoints at any time.
-- Cloudboard is not affiliated with Pinterest. Image rights remain with their respective owners.
+Upgrading from **Import From Pinterest**: existing `.pboard` boards remain compatible. Install Cloudboard in the new `cloudboard` plugin folder; settings from the old installation are not migrated automatically.
 
 ## 😎 You might also like some other plugins I've made:
 
-- **[TidyTasks](obsidian://show-plugin?id=tidytasks)** — Automatically move completed tasks to the bottom of each Markdown task list while keeping subtasks attached and surrounding text intact.
-- **[Notemoji](obsidian://show-plugin?id=notemoji)** — Assign emoji icons to notes and folders in the file explorer to make your vault feel a little cozier.
+- **[TidyTasks](obsidian://show-plugin?id=tidytasks)** - Automatically move completed tasks to the bottom of each Markdown task list, keeping subtasks attached and surrounding text in place.
+- **[Notemoji](obsidian://show-plugin?id=notemoji)** - Assign emoji icons to notes and folders in the file explorer to make your vault feel a little cozier.
 
-Cloudboard is designed for Windows, macOS, Android and iOS. Mobile testing on real devices is still ongoing.
+Cloudboard is designed to work across Windows, macOS, Android, and iOS. Mobile testing on real devices is still ongoing.
 
 ## ⚠️ Feedback and support
 
