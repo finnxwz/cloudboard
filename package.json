@@ -1,15 +1,15 @@
 {
-  "name": "import-from-pinterest",
-  "version": "1.5.0",
-  "description": "Pinterest-style Obsidian image boards with local and online images.",
+  "name": "cloudboard",
+  "version": "1.5.1",
+  "description": "Cloudboard: Pinterest-style Obsidian image boards with local and online images.",
   "main": "main.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/finnxwz/obsidian-import-from-pinterest.git"
+    "url": "git+https://github.com/finnxwz/obsidian-cloudboard.git"
   },
-  "homepage": "https://github.com/finnxwz/obsidian-import-from-pinterest#readme",
+  "homepage": "https://github.com/finnxwz/obsidian-cloudboard#readme",
   "bugs": {
-    "url": "https://github.com/finnxwz/obsidian-import-from-pinterest/issues"
+    "url": "https://github.com/finnxwz/obsidian-cloudboard/issues"
   },
   "scripts": {
     "dev": "node esbuild.config.mjs",

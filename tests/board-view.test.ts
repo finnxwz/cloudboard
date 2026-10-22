@@ -232,7 +232,7 @@ describe('actual board view rendering', () => {
   });
   it('shows exactly four columns and four central plus frames, without Canvas', async () => {
     const { view, actions, file } = await openBoard(createBoardData('Tattoo-Ideen'));
-    expect(view.getViewType()).toBe('pinterest-image-board');
+    expect(view.getViewType()).toBe('cloudboard-view');
     expect(view.canAcceptExtension('pboard')).toBe(true);
     expect(view.canAcceptExtension('canvas')).toBe(false);
     expect(view.contentEl.querySelectorAll('.pinterest-board-column')).toHaveLength(4);

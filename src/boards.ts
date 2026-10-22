@@ -147,7 +147,7 @@ export class BoardController {
         const board = parseBoard(await this.app.vault.read(file));
         if (JSON.stringify(renameBoardPaths(board, oldPath, newPath)) === JSON.stringify(board)) continue;
         await this.update(file, current => renameBoardPaths(current, oldPath, newPath));
-      } catch (error) { console.error('[Import From Pinterest] Board-Verknüpfung konnte nicht aktualisiert werden:', message(error)); }
+      } catch (error) { console.error('[Cloudboard] Board-Verknüpfung konnte nicht aktualisiert werden:', message(error)); }
     }
   }
 

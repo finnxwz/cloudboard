@@ -14,7 +14,7 @@ import { addLocalizedCommand } from './i18n-ui';
 
 function message(error: unknown): string { return error instanceof Error ? error.message : String(error); }
 
-export default class ImportFromPinterest extends Plugin {
+export default class CloudboardPlugin extends Plugin {
   settings: Settings = { ...DEFAULT_SETTINGS };
   /** Fallback when Obsidian's canvas serializer drops custom root properties. */
   private links: Record<string, PinterestMetadata> = {};
@@ -54,7 +54,7 @@ export default class ImportFromPinterest extends Plugin {
       },
     });
     addLocalizedCommand(this, 'syncCanvases', { id: 'sync-pinterest-canvases', callback: () => { void this.syncAll(true); } });
-    this.addSettingTab(new PinterestSettingsTab(this.app, this));
+    this.addSettingTab(new CloudboardSettingsTab(this.app, this));
     this.registerEvent(this.app.vault.on('rename', (file, oldPath) => {
       // Folder renames also move every registered canvas underneath them.
       let changed = false;
@@ -103,7 +103,7 @@ export default class ImportFromPinterest extends Plugin {
   }
 
   private logError(context: string, error: unknown): void {
-    console.error(`[Import From Pinterest] ${context}: ${message(error)}`);
+    console.error(`[Cloudboard] ${context}: ${message(error)}`);
   }
 
   async importBoard(input: string, source: TFile | null): Promise<void> {
@@ -192,7 +192,7 @@ export default class ImportFromPinterest extends Plugin {
 }
 
 class BoardModal extends Modal {
-  constructor(app: App, private plugin: ImportFromPinterest, private source: TFile | null) { super(app); }
+  constructor(app: App, private plugin: CloudboardPlugin, private source: TFile | null) { super(app); }
 
   onOpen(): void {
     this.setTitle(t('legacyConvert'));
@@ -241,8 +241,8 @@ class BoardModal extends Modal {
   onClose(): void { this.contentEl.empty(); }
 }
 
-class PinterestSettingsTab extends PluginSettingTab {
-  constructor(app: App, private plugin: ImportFromPinterest) { super(app, plugin); }
+class CloudboardSettingsTab extends PluginSettingTab {
+  constructor(app: App, private plugin: CloudboardPlugin) { super(app, plugin); }
 
   display(): void {
     this.containerEl.empty();

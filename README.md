@@ -1,10 +1,12 @@
-# Import From Pinterest
+# Cloudboard
 
-Ein Obsidian-Community-Plugin in TypeScript: Eine **eigene Pinterest-artige Board-Ansicht**, mit vier Bildspalten, abgerundeten Bildkarten und leeren Rahmen mit einem Plus in der Mitte. **Kein Canvas und keine Pinterest-Anmeldung erforderlich.** Lokale Fotos, direkte Online-Bilder und öffentliche Vorschaubilder einzelner Pinterest-Pins lassen sich mischen.
+**Cloudboard** ist ein Obsidian-Community-Plugin in TypeScript: eine **eigene Pinterest-artige Board-Ansicht** mit vier Bildspalten, abgerundeten Bildkarten und leeren Rahmen mit einem Plus in der Mitte. **Kein Canvas und keine Pinterest-Anmeldung erforderlich.** Lokale Fotos, direkte Online-Bilder und öffentliche Vorschaubilder einzelner Pinterest-Pins lassen sich mischen.
+
+> **Umbenennung:** Bis Version 1.5.0 hieß das Plugin „Import From Pinterest“. Vorhandene `.pboard`-Boards bleiben kompatibel. Die neue Plugin-ID lautet `cloudboard`; eine frühere Installation muss dafür durch die neue Version im Ordner `cloudboard` ersetzt werden. Alte Plugin-Einstellungen werden nicht automatisch übernommen.
 
 ## Language / Sprache (ab 1.5.0)
 
-Die Oberfläche ist standardmäßig **Englisch**. Unter **Settings → Import From Pinterest → Language** kannst du zwischen **English**, **Deutsch**, **Español** und **Français** wählen. Bei deutscher Oberfläche heißt das Feld **Sprache**, bei spanischer **Idioma** und bei französischer **Langue**.
+Die Oberfläche ist standardmäßig **Englisch**. Unter **Settings → Cloudboard → Language** kannst du zwischen **English**, **Deutsch**, **Español** und **Français** wählen. Bei deutscher Oberfläche heißt das Feld **Sprache**, bei spanischer **Idioma** und bei französischer **Langue**.
 
 Die Auswahl wird in den Plugin-Einstellungen gespeichert und nach einem Neustart wiederhergestellt. Einstellungen, geöffnete Boards, Command-Palette-Einträge und die Beschriftung des Bilder-Symbols wechseln ohne Plugin-Neustart. Kontextmenüs und Dialoge verwenden die gewählte Sprache beim nächsten Öffnen; bereits eingegebene Inhalte werden nicht durch einen Sprachwechsel verworfen.
 
@@ -20,7 +22,7 @@ Die Auswahl wird in den Plugin-Einstellungen gespeichert und nach einem Neustart
 
 ## Neu ab 1.2.0: Echtes Bilderboard statt Canvas
 
-**Ab 1.4.0:** Unter **Einstellungen → Import From Pinterest → Bildunterschriften-Leiste anzeigen** lässt sich die gesamte Leiste unter den Fotos ein- und ausschalten (Standard: an). Die Änderung wirkt sofort auf alle geöffneten Boards und wird in den Plugin-Einstellungen gespeichert.
+**Ab 1.4.0:** Unter **Einstellungen → Cloudboard → Bildunterschriften-Leiste anzeigen** lässt sich die gesamte Leiste unter den Fotos ein- und ausschalten (Standard: an). Die Änderung wirkt sofort auf alle geöffneten Boards und wird in den Plugin-Einstellungen gespeichert.
 
 - **Leiste an:** Bildunterschrift, Stift und Papierkorb stehen unter dem Foto. Die Icons sind zunächst halbtransparent und werden beim Darüberfahren oder Tastaturfokus voll sichtbar.
 - **Leiste aus:** Die gesamte Kachel besteht nur aus dem Foto. Stift und Papierkorb erscheinen oben rechts **auf dem Bild**, sobald der Mauszeiger über der Kachel steht. Ohne Hover sind sie vollständig ausgeblendet. Tastaturfokus blendet sie ebenfalls ein. Auf dem Handy einmal auf das Foto tippen, um die Aktionen einzublenden; ein zweites Tippen öffnet die große Vorschau. Außerhalb der Kachel tippen blendet die Aktionen wieder aus.
@@ -66,12 +68,12 @@ Voraussetzung: Obsidian **1.5.7+**.
 
 ### Aus dem GitHub-Release
 
-1. Das [Release 1.5.0](https://github.com/finnxwz/obsidian-import-from-pinterest/releases/tag/1.5.0) öffnen.
+1. Das [Release 1.5.1](https://github.com/finnxwz/obsidian-cloudboard/releases/tag/1.5.1) öffnen.
 2. `main.js`, `manifest.json` und `styles.css` herunterladen.
-3. Die drei Dateien in den Ordner `<Vault>/.obsidian/plugins/import-from-pinterest/` kopieren.
+3. Die drei Dateien in den Ordner `<Vault>/.obsidian/plugins/cloudboard/` kopieren.
 4. Obsidian neu laden und das Plugin unter **Einstellungen → Community-Plugins** aktivieren.
 
-Alternativ kann das Repository mit [BRAT](https://github.com/TfTHacker/obsidian42-brat) als Beta-Plugin hinzugefügt werden: `finnxwz/obsidian-import-from-pinterest`.
+Alternativ kann das Repository mit [BRAT](https://github.com/TfTHacker/obsidian42-brat) als Beta-Plugin hinzugefügt werden: `finnxwz/obsidian-cloudboard`.
 
 Das Plugin ist noch nicht im offiziellen Community-Verzeichnis veröffentlicht. Die Anleitung zur Einreichung dort steht in der [Obsidian-Dokumentation](https://docs.obsidian.md/Plugins/Releasing/Submit+your+plugin).
 
@@ -134,7 +136,7 @@ Das Canvas enthält ein zusätzliches JSON-Feld:
 }
 ```
 
-`pins` ordnet Pinterest-IDs den Canvas-Node-IDs und zuletzt erzeugten Texten zu. Unbekannte Canvas-Felder werden erhalten. Da Obsidian benutzerdefinierte Felder beim Speichern entfernen kann, liegt eine Sicherung dieser Zuordnung in `.obsidian/plugins/import-from-pinterest/data.json`. Datei- und Ordnerumbenennungen im Vault aktualisieren diese Zuordnung. Beim Übertragen auf ein anderes Gerät auch diese Plugin-Daten mitsynchronisieren, insbesondere wenn Obsidian das benutzerdefinierte Canvas-Feld bereits entfernt hat.
+`pins` ordnet Pinterest-IDs den Canvas-Node-IDs und zuletzt erzeugten Texten zu. Unbekannte Canvas-Felder werden erhalten. Da Obsidian benutzerdefinierte Felder beim Speichern entfernen kann, liegt eine Sicherung dieser Zuordnung in `.obsidian/plugins/cloudboard/data.json`. Datei- und Ordnerumbenennungen im Vault aktualisieren diese Zuordnung. Beim Übertragen auf ein anderes Gerät auch diese Plugin-Daten mitsynchronisieren, insbesondere wenn Obsidian das benutzerdefinierte Canvas-Feld bereits entfernt hat.
 
 ## Pinterest-Einschränkungen
 

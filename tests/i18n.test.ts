@@ -67,17 +67,17 @@ describe('four-language interface', () => {
     let registered: Command;
     const callback = vi.fn();
     const plugin = {
-      addCommand: (command: Command) => { registered = { ...command, name: `Import From Pinterest: ${command.name}` }; return registered; },
+      addCommand: (command: Command) => { registered = { ...command, name: `Cloudboard: ${command.name}` }; return registered; },
       register: (dispose: () => void) => { disposers.push(dispose); },
     } as unknown as Plugin;
     addLocalizedCommand(plugin, 'convertNote', { id: 'create-image-board', callback });
     try {
       setLanguage('fr');
-      expect(registered!.name).toBe('Import From Pinterest: Convertir la note en tableau d’images');
+      expect(registered!.name).toBe('Cloudboard: Convertir la note en tableau d’images');
       expect(registered!.id).toBe('create-image-board');
       expect(registered!.callback).toBe(callback);
       setLanguage('es');
-      expect(registered!.name).toBe('Import From Pinterest: Convertir nota en tablero de imágenes');
+      expect(registered!.name).toBe('Cloudboard: Convertir nota en tablero de imágenes');
     } finally { disposers.forEach(dispose => dispose()); }
   });
 });

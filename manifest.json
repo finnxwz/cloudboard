@@ -1,9 +1,9 @@
 {
-  "id": "import-from-pinterest",
-  "name": "Import From Pinterest",
-  "version": "1.5.0",
+  "id": "cloudboard",
+  "name": "Cloudboard",
+  "version": "1.5.1",
   "minAppVersion": "1.5.7",
   "description": "Create dedicated four-column image boards with local photos, online images and public Pinterest pin previews. No Canvas required.",
-  "author": "Import From Pinterest contributors",
+  "author": "Cloudboard contributors",
   "isDesktopOnly": false
 }

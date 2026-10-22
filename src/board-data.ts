@@ -2,7 +2,7 @@ import { imageUrl } from './image-links';
 import { t } from './i18n';
 
 export const BOARD_EXTENSION = 'pboard';
-export const BOARD_VIEW_TYPE = 'pinterest-image-board';
+export const BOARD_VIEW_TYPE = 'cloudboard-view';
 
 export interface BoardCard {
   id: string;
