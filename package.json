@@ -1,0 +1,33 @@
+{
+  "name": "import-from-pinterest",
+  "version": "1.5.0",
+  "description": "Pinterest-style Obsidian image boards with local and online images.",
+  "main": "main.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/finnxwz/obsidian-import-from-pinterest.git"
+  },
+  "homepage": "https://github.com/finnxwz/obsidian-import-from-pinterest#readme",
+  "bugs": {
+    "url": "https://github.com/finnxwz/obsidian-import-from-pinterest/issues"
+  },
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc --noEmit && node esbuild.config.mjs production",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "obsidian-plugin",
+    "pinterest",
+    "canvas"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "esbuild": "^0.28.2",
+    "happy-dom": "^21.0.4",
+    "obsidian": "latest",
+    "typescript": "^5.7.0",
+    "vitest": "^5.0.5"
+  }
+}
