@@ -68,12 +68,12 @@ Voraussetzung: Obsidian **1.5.7+**.
 
 ### Aus dem GitHub-Release
 
-1. Das [Release 1.5.1](https://github.com/finnxwz/obsidian-cloudboard/releases/tag/1.5.1) öffnen.
+1. Das [Release 1.5.1](https://github.com/finnxwz/cloudboard/releases/tag/1.5.1) öffnen.
 2. `main.js`, `manifest.json` und `styles.css` herunterladen.
 3. Die drei Dateien in den Ordner `<Vault>/.obsidian/plugins/cloudboard/` kopieren.
 4. Obsidian neu laden und das Plugin unter **Einstellungen → Community-Plugins** aktivieren.
 
-Alternativ kann das Repository mit [BRAT](https://github.com/TfTHacker/obsidian42-brat) als Beta-Plugin hinzugefügt werden: `finnxwz/obsidian-cloudboard`.
+Alternativ kann das Repository mit [BRAT](https://github.com/TfTHacker/obsidian42-brat) als Beta-Plugin hinzugefügt werden: `finnxwz/cloudboard`.
 
 Das Plugin ist noch nicht im offiziellen Community-Verzeichnis veröffentlicht. Die Anleitung zur Einreichung dort steht in der [Obsidian-Dokumentation](https://docs.obsidian.md/Plugins/Releasing/Submit+your+plugin).
 

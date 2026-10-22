@@ -5,11 +5,11 @@
   "main": "main.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/finnxwz/obsidian-cloudboard.git"
+    "url": "git+https://github.com/finnxwz/cloudboard.git"
   },
-  "homepage": "https://github.com/finnxwz/obsidian-cloudboard#readme",
+  "homepage": "https://github.com/finnxwz/cloudboard#readme",
   "bugs": {
-    "url": "https://github.com/finnxwz/obsidian-cloudboard/issues"
+    "url": "https://github.com/finnxwz/cloudboard/issues"
   },
   "scripts": {
     "dev": "node esbuild.config.mjs",
