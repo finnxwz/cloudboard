@@ -14,7 +14,7 @@ Every board is stored as a dedicated `.pboard` file. Your original Markdown note
 - Drag cards to reorder them within a column or move them to another column. On touch screens, hold a card for a moment and drag. Keyboard users can focus a card and move it with the arrow keys.
 - The trash icon removes a card from the board, **never the image file** from your vault.
 - The board keeps all four columns on narrow screens and scrolls horizontally instead of switching to fewer columns.
-- Existing Canvas boards can be converted with **Import as an image board**. The original `.canvas` file stays unchanged.
+- Existing Canvases can be used as an image source: right-click a `.canvas` file and choose **Import as an image board**. Cloudboard copies recognizable image cards and embedded images into a new `.pboard`. Canvas layout, connections, text and other nodes are not transferred. The original `.canvas` file stays unchanged.
 - The interface is available in **English (default), German, Spanish and French**. Switching the language updates open boards and command names; your own captions and notes are never translated.
 - The older Pinterest-to-Canvas importer remains available for public boards. Pinterest may block previews even for public pins; in that case, copy the direct image address (`https://i.pinimg.com/...`) instead of the pin page URL.
 - Cloudboard is not affiliated with Pinterest. Image rights remain with their respective owners.
@@ -25,7 +25,7 @@ Every board is stored as a dedicated `.pboard` file. Your original Markdown note
 - **Show caption bar**: show captions and actions below the photo, or hide the bar and reveal actions on hover/tap.
 - **Cloudboard: Convert note into an image board**: right-click a Markdown note or use the Command Palette. With no Markdown note active, the **New image board** ribbon icon creates an empty board.
 - **Cloudboard: Add image to board**: right-click a `.pboard` file or use the Command Palette to open the image picker.
-- **Cloudboard: Convert existing Canvas into an image board**: right-click a `.canvas` file or use the Command Palette. The source Canvas is not modified.
+- **Cloudboard: Convert existing Canvas into an image board**: right-click a `.canvas` file or use the Command Palette. This imports only recognizable images; layout, connections, text and other Canvas nodes are not transferred. The source Canvas is not modified.
 - **Sync interval**, **Save images locally** and **Sync now** apply only to the older Canvas importer. **Legacy: Import Pinterest board as Canvas** and **Sync Pinterest Canvases** remain available for that workflow.
 - Supported local formats: JPG/JPEG, PNG, GIF, WebP, AVIF and BMP, up to 25 MB per image. HEIC and SVG are not supported.
 
