@@ -2,11 +2,11 @@
 
 **Create Pinterest-style image boards with two to five columns, mixing local photos, vault images, direct online images and public Pinterest pin previews. No Canvas and no Pinterest login required.**
 
-Every board is stored as a dedicated `.cloud` file. Your original Markdown note is never modified. Existing `.pboard` files from earlier versions remain supported.
+Every board is stored as a standalone `.cloud` file. A Markdown note can be converted into a board; once the board has been created and opened successfully, the source note is moved to Obsidian’s configured trash. Existing `.pboard` files from earlier versions remain supported.
 
 ## 💡 How it works
 
-- Convert a Markdown note to create `<note name> Board.cloud`. New boards start with four columns, each with a **+** frame for adding more images. Use the selector in the board header to choose between two and five columns per board.
+- Convert a Markdown note from its context menu or the Command Palette. Cloudboard creates `<note name>.cloud` in the same folder, opens it, and only then moves the original note to Obsidian’s configured trash. Alternatively, create an empty standalone board from the ribbon. New boards start with four columns; use the selector in the board header to choose between two and five.
 - Add photos **from your device**, **from your vault**, as a **direct HTTPS image** or as a **public Pinterest pin preview**. Device photos are collected below `Cloudboard assets/<board path>/`, so they do not appear individually between your notes. Vault images are embedded without being moved or duplicated.
 - Online images stay online and are not downloaded into your vault. They need an internet connection and can disappear if the image host removes them.
 - Click an image for a large preview. The pencil edits the caption; clearing the caption hides it. Source links are stored internally but never shown.
@@ -26,7 +26,8 @@ Every board is stored as a dedicated `.cloud` file. Your original Markdown note 
 - **Show asset folder in file explorer**: reveal `Cloudboard assets` in Obsidian’s file explorer. It is hidden by default while the images remain stored and synced in the vault.
 - **Columns**: choose between two and five columns directly in each board. Four columns are used by default. When reducing the count, cards from removed columns move into the last remaining column.
 - **Default columns for new boards**: choose whether newly created boards start with two, three, four or five columns. Existing boards keep their own per-board selection.
-- **Cloudboard: Convert note into an image board**: right-click a Markdown note or use the Command Palette. With no Markdown note active, the **New image board** ribbon icon creates an empty board.
+- **Cloudboard: New image board**: create a standalone board from the ribbon or Command Palette. No Markdown note is needed.
+- **Cloudboard: Convert note into an image board**: replace the active Markdown note with a same-named `.cloud` board. The note is moved to the configured trash only after successful board creation.
 - **Cloudboard: Add image to board**: right-click a `.cloud` file (or a legacy `.pboard` file) or use the Command Palette to open the image picker.
 - **Cloudboard: Convert existing Canvas into an image board**: right-click a `.canvas` file or use the Command Palette. This imports only recognizable images; layout, connections, text and other Canvas nodes are not transferred. The source Canvas is not modified.
 - Supported local formats: JPG/JPEG, PNG, GIF, WebP, AVIF and BMP, up to 25 MB per image. HEIC and SVG are not supported.

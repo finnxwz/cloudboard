@@ -63,7 +63,7 @@ describe('dedicated board storage (not Canvas)', () => {
     expect(() => moveBoardCard(board, 'a', 1.5, null)).toThrow('Zielspalte');
   });
   it('creates a board with no Canvas nodes, edges, positions or sync metadata', () => {
-    const board = createBoardData('Tattoo-Ideen', 'Tattoo-Ideen.md');
+    const board = createBoardData('Tattoo-Ideen');
     expect(parseBoard(JSON.stringify(board))).toEqual(board);
     expect(board.cards).toEqual([]);
     expect(board.nodes).toBeUndefined();
@@ -87,10 +87,9 @@ describe('dedicated board storage (not Canvas)', () => {
     expect(board.cards).toHaveLength(2);
   });
 
-  it('updates vault image and source note links on folder renames, not remote URLs', () => {
-    const board = addBoardCards(createBoardData('Board', 'Photos/Ideas.md'), [local(), remote()]);
+  it('updates vault image links on folder renames, not remote URLs', () => {
+    const board = addBoardCards(createBoardData('Board'), [local(), remote()]);
     const renamed = renameBoardPaths(board, 'Photos', 'Attachments');
-    expect(renamed.sourceNote).toBe('Attachments/Ideas.md');
     expect(renamed.cards[0]!.file).toBe('Attachments/tattoo.jpg');
     expect(renamed.cards[1]).toEqual(remote());
     expect(renameBoardPaths(board, 'Photo', 'Other')).toEqual(board);

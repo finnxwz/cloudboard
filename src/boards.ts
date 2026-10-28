@@ -26,12 +26,22 @@ export function registerBoards(plugin: Plugin, getOptions: () => BoardViewOption
   plugin.registerExtensions([...BOARD_EXTENSIONS], BOARD_VIEW_TYPE);
   plugin.register(() => controller.dispose());
   const create = (): void => {
-    const file = plugin.app.workspace.getActiveFile();
-    void controller.create(file?.extension === 'md' ? file : null,
+    const folder = plugin.app.workspace.getActiveFile()?.parent?.path ?? '';
+    void controller.create(folder,
       getOptions().defaultColumnCount ?? DEFAULT_COLUMN_COUNT).catch(error => new Notice(message(error)));
   };
   addLocalizedRibbon(plugin, 'newBoard', create);
-  addLocalizedCommand(plugin, 'convertNote', { id: 'create-image-board', callback: create });
+  addLocalizedCommand(plugin, 'newBoard', { id: 'create-image-board', callback: create });
+  addLocalizedCommand(plugin, 'convertNote', {
+    id: 'convert-note-to-image-board',
+    checkCallback: checking => {
+      const file = plugin.app.workspace.getActiveFile();
+      if (file?.extension !== 'md') return false;
+      if (!checking) void controller.convert(file, getOptions().defaultColumnCount ?? DEFAULT_COLUMN_COUNT)
+        .catch(error => new Notice(message(error)));
+      return true;
+    },
+  });
   addLocalizedCommand(plugin, 'addToBoard', {
     id: 'add-images-to-board',
     checkCallback: checking => {
@@ -53,7 +63,8 @@ export function registerBoards(plugin: Plugin, getOptions: () => BoardViewOption
   plugin.registerEvent(plugin.app.workspace.on('file-menu', (menu, file) => {
     if (!(file instanceof TFile)) return;
     if (file.extension === 'md') menu.addItem(item => item.setTitle(t('convertNote')).setIcon('images')
-      .onClick(() => { void controller.create(file).catch(error => new Notice(message(error))); }));
+      .onClick(() => { void controller.convert(file, getOptions().defaultColumnCount ?? DEFAULT_COLUMN_COUNT)
+        .catch(error => new Notice(message(error))); }));
     if (isBoardExtension(file.extension)) menu.addItem(item => item.setTitle(t('addToBoard')).setIcon('image-plus')
       .onClick(() => controller.add(file, 0)));
     if (file.extension === 'canvas') menu.addItem(item => item.setTitle(t('migrateCanvasMenu')).setIcon('images')
@@ -85,20 +96,31 @@ export class BoardController {
     modal.open();
   }
 
-  async create(source: TFile | null, columns = DEFAULT_COLUMN_COUNT): Promise<void> {
+  async create(folder = '', columns = DEFAULT_COLUMN_COUNT): Promise<void> {
     this.assertActive();
-    const title = source ? `${source.basename} Board` : t('newBoard');
-    const board = createBoardData(title, source?.path, columns);
-    await this.createFile(board, source?.parent?.path ?? '');
+    const board = createBoardData(t('newBoard'), columns);
+    await this.createFile(board, folder);
   }
 
-  private async createFile(board: BoardData, folder: string): Promise<void> {
+  async convert(source: TFile, columns = DEFAULT_COLUMN_COUNT): Promise<void> {
+    this.assertActive();
+    if (source.extension !== 'md' || this.app.vault.getAbstractFileByPath(source.path) !== source) {
+      throw new Error(t('noteMissing'));
+    }
+    const board = createBoardData(source.basename, columns);
+    await this.createFile(board, source.parent?.path ?? '');
+    this.assertActive();
+    await this.app.fileManager.trashFile(source);
+  }
+
+  private async createFile(board: BoardData, folder: string): Promise<TFile> {
     this.assertActive();
     const base = normalizePath([folder, board.title].filter(Boolean).join('/'));
     let path = `${base}.${BOARD_EXTENSION}`;
     for (let suffix = 2; this.app.vault.getAbstractFileByPath(path); suffix++) path = `${base} ${suffix}.${BOARD_EXTENSION}`;
     const file = await this.app.vault.create(path, JSON.stringify(board, null, 2));
     if (!this.disposed) await this.app.workspace.getLeaf(false).openFile(file);
+    return file;
   }
 
   async update(file: TFile, change: (board: BoardData) => BoardData): Promise<void> {
@@ -190,7 +212,6 @@ export class BoardController {
       if (node.type === 'file' && typeof node.file === 'string') {
         const file = this.app.vault.getAbstractFileByPath(node.file);
         if (file instanceof TFile && IMAGE_EXTENSIONS.has(file.extension.toLowerCase())) local = file;
-        else if (file instanceof TFile && file.extension === 'md') board.sourceNote = file.path;
       }
       if (!local && node.type === 'text' && node.text) {
         const wiki = /!\[\[([^\]|]+)(?:\|[^\]]*)?\]\]/.exec(node.text);

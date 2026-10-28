@@ -247,12 +247,12 @@ describe('actual board view rendering', () => {
   });
 
   it('renders two to five columns and persists the selected count per board', async () => {
-    const two = createBoardData('Two', undefined, 2);
+    const two = createBoardData('Two', 2);
     const openedTwo = await openBoard(two);
     expect(openedTwo.view.contentEl.querySelectorAll('.pinterest-board-column')).toHaveLength(2);
     expect(openedTwo.view.contentEl.querySelector('.pinterest-board-grid')?.getAttribute('aria-label')).toContain('2');
 
-    const five = createBoardData('Five', undefined, 5);
+    const five = createBoardData('Five', 5);
     const { view, actions, file } = await openBoard(five);
     expect(view.contentEl.querySelectorAll('.pinterest-board-column')).toHaveLength(5);
     const select = view.contentEl.querySelector<HTMLSelectElement>('.pinterest-board-column-control select')!;

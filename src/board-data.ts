@@ -28,14 +28,13 @@ export interface BoardData {
   title: string;
   createdAt: string;
   columns: ColumnCount;
-  sourceNote?: string;
   cards: BoardCard[];
   [key: string]: unknown;
 }
 
-export function createBoardData(title: string, sourceNote?: string, columns: ColumnCount = DEFAULT_COLUMN_COUNT): BoardData {
+export function createBoardData(title: string, columns: ColumnCount = DEFAULT_COLUMN_COUNT): BoardData {
   return { type: 'pinterest-image-board', version: 1, title,
-    createdAt: new Date().toISOString(), columns, ...(sourceNote ? { sourceNote } : {}), cards: [] };
+    createdAt: new Date().toISOString(), columns, cards: [] };
 }
 
 export function isColumnCount(value: unknown): value is ColumnCount {
@@ -54,7 +53,7 @@ export function parseBoard(raw: string): BoardData {
   const columns = (board as { columns?: unknown }).columns ?? DEFAULT_COLUMN_COUNT;
   if (board.type !== 'pinterest-image-board' || board.version !== 1 ||
     typeof board.title !== 'string' || typeof board.createdAt !== 'string' ||
-    !isColumnCount(columns) || (board.sourceNote !== undefined && !vaultPath(board.sourceNote)) || !Array.isArray(board.cards)) {
+    !isColumnCount(columns) || !Array.isArray(board.cards)) {
     throw new Error(t('unsupportedBoard'));
   }
   const ids = new Set<string>();
@@ -124,7 +123,6 @@ export function renameBoardPaths(board: BoardData, oldPath: string, newPath: str
     ? newPath + path.slice(oldPath.length) : path;
   return {
     ...board,
-    ...(board.sourceNote ? { sourceNote: rename(board.sourceNote) } : {}),
     cards: board.cards.map(card => card.kind === 'local' && card.file ? { ...card, file: rename(card.file) } : card),
   };
 }

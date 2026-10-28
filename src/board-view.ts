@@ -119,14 +119,6 @@ export class ImageBoardView extends FileView {
       } finally { columnSelect.disabled = false; }
     });
     header.createEl('p', { text: t('boardSubtitle'), cls: 'pinterest-board-subtitle' });
-    if (board.sourceNote) {
-      const note = header.createEl('button', { text: t('openSourceNote'), cls: 'pinterest-board-note' });
-      note.addEventListener('click', () => {
-        const source = this.app.vault.getAbstractFileByPath(board.sourceNote!);
-        if (source instanceof TFile) void this.app.workspace.getLeaf('tab').openFile(source);
-        else new Notice(t('sourceNoteMissing'));
-      });
-    }
     const scroll = this.contentEl.createDiv({ cls: 'pinterest-board-scroll' });
     const grid = scroll.createDiv({ cls: 'pinterest-board-grid', attr: { 'aria-label': t('boardColumns', { count: board.columns }) } });
     grid.style.setProperty('--cloudboard-column-count', String(board.columns));
