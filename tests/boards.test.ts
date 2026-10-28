@@ -2,13 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TFile, type App, type TFolder } from 'obsidian';
 import { BoardController } from '../src/boards';
 import { moveBoardCard, parseBoard, updateBoardCaption } from '../src/board-data';
-import { pinText } from '../src/canvas';
 import { setLanguage } from '../src/i18n';
 
 beforeEach(() => { setLanguage('de'); });
 
 function vaultFixture() {
   const files = new Map<string, TFile>();
+  const folders = new Set<string>();
   const content = new Map<TFile, string>();
   const makeFile = (path: string, raw: string): TFile => {
     const file = new TFile();
@@ -23,10 +23,11 @@ function vaultFixture() {
   };
   const openFile = vi.fn().mockResolvedValue(undefined);
   const vault = {
-    getAbstractFileByPath: vi.fn((path: string) => files.get(path) ?? null),
+    getAbstractFileByPath: vi.fn((path: string) => files.get(path) ?? (folders.has(path) ? { path } : null)),
     getFiles: vi.fn(() => [...files.values()]),
     read: vi.fn(async (file: TFile) => content.get(file)!),
     create: vi.fn(async (path: string, raw: string) => makeFile(path, raw)),
+    createFolder: vi.fn(async (path: string) => { folders.add(path); }),
     createBinary: vi.fn(async (path: string, _bytes: ArrayBuffer) => makeFile(path, '[image bytes]')),
     process: vi.fn(async (file: TFile, change: (raw: string) => string) => {
       const updated = change(content.get(file)!);
@@ -37,7 +38,7 @@ function vaultFixture() {
   const app = {
     vault,
     workspace: { getLeaf: vi.fn(() => ({ openFile })) },
-    fileManager: { getAvailablePathForAttachment: vi.fn(async (name: string) => `Attachments/${name}`) },
+    fileManager: {},
     metadataCache: { getFirstLinkpathDest: vi.fn((path: string) => files.get(path) ?? null) },
   };
   const controller = new BoardController(app as unknown as App);
@@ -48,7 +49,7 @@ describe('board creation and persistence', () => {
   it('persists caption edits and reordered columns across reloads without altering images', async () => {
     const { controller, files, content, vault } = vaultFixture();
     await controller.create(null);
-    const file = files.get('Neues Bilderboard.pboard')!;
+    const file = files.get('Neues Bilderboard.cloud')!;
     await controller.saveImages(file, 0, ['https://example.org/a.jpg', 'https://example.org/b.jpg'], [], [], '', new Map(), () => {});
     const [a, b] = parseBoard(content.get(file)!).cards;
     await controller.update(file, board => updateBoardCaption(board, a!.id, 'My new caption'));
@@ -62,7 +63,7 @@ describe('board creation and persistence', () => {
     const { controller, makeFile, files, content, openFile } = vaultFixture();
     const note = makeFile('Ideas/Tattoos.md', '# Tattoos\nMy notes stay intact.');
     await controller.create(note);
-    const file = files.get('Ideas/Tattoos Board.pboard')!;
+    const file = files.get('Ideas/Tattoos Board.cloud')!;
     expect(file).toBeDefined();
     const board = parseBoard(content.get(file)!);
     expect(board.sourceNote).toBe(note.path);
@@ -72,10 +73,17 @@ describe('board creation and persistence', () => {
     expect(openFile).toHaveBeenCalledWith(file);
   });
 
+  it('uses the configured default column count for newly created boards', async () => {
+    const { controller, files, content } = vaultFixture();
+    await controller.create(null, 2);
+    const board = parseBoard(content.get(files.get('Neues Bilderboard.cloud')!)!);
+    expect(board.columns).toBe(2);
+  });
+
   it('adds online images without creating binary attachments, then reloads them from disk', async () => {
     const { controller, files, content, vault } = vaultFixture();
     await controller.create(null);
-    const boardFile = files.get('Neues Bilderboard.pboard')!;
+    const boardFile = files.get('Neues Bilderboard.cloud')!;
     await controller.saveImages(boardFile, 2, ['https://images.example.org/tattoo.jpg'], [], [],
       'My tattoo idea', new Map(), () => {});
     const saved = parseBoard(content.get(boardFile)!);
@@ -89,17 +97,33 @@ describe('board creation and persistence', () => {
   it('uses existing vault photos and copies device uploads only once', async () => {
     const { controller, makeFile, files, content, vault } = vaultFixture();
     await controller.create(null);
-    const boardFile = files.get('Neues Bilderboard.pboard')!;
+    const boardFile = files.get('Neues Bilderboard.cloud')!;
     const photo = makeFile('Photos/existing.jpg', '[existing image]');
     const upload = new File([new Uint8Array([1, 2, 3])], 'new.jpg', { type: 'image/jpeg' });
     const cache = new Map<File, TFile>();
     await controller.saveImages(boardFile, 1, [], [photo], [upload], '', cache, () => {});
     expect(vault.createBinary).toHaveBeenCalledTimes(1);
     expect(parseBoard(content.get(boardFile)!).cards.map(card => card.file))
-      .toEqual(['Photos/existing.jpg', 'Attachments/new.jpg']);
+      .toEqual(['Photos/existing.jpg', 'Cloudboard assets/Neues Bilderboard/new.jpg']);
+    expect(vault.createFolder).toHaveBeenCalledWith('Cloudboard assets');
+    expect(vault.createFolder).toHaveBeenCalledWith('Cloudboard assets/Neues Bilderboard');
     // An identical selection reused by a retry uses the copied file, not another download.
     await controller.saveImages(boardFile, 3, [], [], [upload], '', cache, () => {});
     expect(vault.createBinary).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps same-named device photos separate inside the board asset folder', async () => {
+    const { controller, files, content } = vaultFixture();
+    await controller.create(null);
+    const boardFile = files.get('Neues Bilderboard.cloud')!;
+    const first = new File([new Uint8Array([1])], 'photo.jpg', { type: 'image/jpeg' });
+    const second = new File([new Uint8Array([2])], 'photo.jpg', { type: 'image/jpeg' });
+    await controller.saveImages(boardFile, 0, [], [], [first], '', new Map(), () => {});
+    await controller.saveImages(boardFile, 0, [], [], [second], '', new Map(), () => {});
+    expect(parseBoard(content.get(boardFile)!).cards.map(card => card.file)).toEqual([
+      'Cloudboard assets/Neues Bilderboard/photo.jpg',
+      'Cloudboard assets/Neues Bilderboard/photo 2.jpg',
+    ]);
   });
 
   it('migrates pictures from the earlier Canvas without modifying it', async () => {
@@ -108,11 +132,11 @@ describe('board creation and persistence', () => {
     const raw = JSON.stringify({ nodes: [
       { id: 'local', type: 'file', file: 'Photos/a.jpg', x: 0, y: 0, width: 320, height: 300 },
       { id: 'remote', type: 'text', x: 344, y: 0, width: 320, height: 400,
-        text: pinText({ id: '123', title: 'A [title]', imageUrl: 'https://i.pinimg.com/a.jpg', link: '', width: 600, height: 800 }) },
+        text: '![A title](<https://i.pinimg.com/a.jpg>)' },
     ], edges: [] });
     const source = makeFile('Old.canvas', raw);
     await controller.fromCanvas(source);
-    const board = parseBoard(content.get(files.get('Old Board.pboard')!)!);
+    const board = parseBoard(content.get(files.get('Old Board.cloud')!)!);
     expect(board.cards).toHaveLength(2);
     expect(board.cards[0]!.file).toBe('Photos/a.jpg');
     expect(board.cards[1]!.url).toBe('https://i.pinimg.com/a.jpg');
@@ -123,8 +147,8 @@ describe('board creation and persistence', () => {
     const { controller, files } = vaultFixture();
     await controller.create(null);
     await controller.create(null);
-    expect(files.has('Neues Bilderboard.pboard')).toBe(true);
-    expect(files.has('Neues Bilderboard 2.pboard')).toBe(true);
+    expect(files.has('Neues Bilderboard.cloud')).toBe(true);
+    expect(files.has('Neues Bilderboard 2.cloud')).toBe(true);
     controller.dispose();
     await expect(controller.create(null)).rejects.toThrow('nicht mehr aktiv');
   });

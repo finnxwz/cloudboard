@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { addBoardCards, createBoardData, moveBoardCard, newCardId, parseBoard, removeBoardCard, renameBoardPaths, updateBoardCaption, type BoardCard } from '../src/board-data';
+import { addBoardCards, createBoardData, moveBoardCard, newCardId, parseBoard, removeBoardCard, renameBoardPaths, updateBoardCaption, updateBoardColumns, type BoardCard } from '../src/board-data';
 import { validateUpload } from '../src/image-files';
 import { setLanguage } from '../src/i18n';
 
@@ -35,6 +35,23 @@ describe('dedicated board storage (not Canvas)', () => {
     const empty = moveBoardCard(moved, 'a', 3, null);
     expect(empty.cards.find(card => card.id === 'a')).toEqual({ ...local('a'), column: 3 });
     expect(parseBoard(JSON.stringify(empty))).toEqual(empty);
+  });
+
+  it('supports two to five columns and moves cards safely when columns are removed', () => {
+    const five = updateBoardColumns(createBoardData('Board'), 5);
+    const populated = addBoardCards(five, [local('a', 0), local('b', 3), local('c', 4)]);
+    expect(moveBoardCard(populated, 'a', 4, null).cards.find(card => card.id === 'a')?.column).toBe(4);
+    const reduced = updateBoardColumns(populated, 2);
+    expect(reduced.columns).toBe(2);
+    expect(reduced.cards.map(card => card.column)).toEqual([0, 1, 1]);
+    expect(() => updateBoardColumns(reduced, 1)).toThrow('zwei und fünf');
+    expect(() => updateBoardColumns(reduced, 6)).toThrow('zwei und fünf');
+  });
+
+  it('opens legacy boards without a column count as four-column boards', () => {
+    const legacy = createBoardData('Legacy');
+    delete (legacy as Partial<typeof legacy>).columns;
+    expect(parseBoard(JSON.stringify(legacy)).columns).toBe(4);
   });
 
   it('refuses stale drop targets and never resurrects removed cards', () => {

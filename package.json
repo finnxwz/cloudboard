@@ -1,7 +1,7 @@
 {
   "name": "cloudboard",
-  "version": "1.5.1",
-  "description": "Cloudboard: Pinterest-style Obsidian image boards with local and online images.",
+  "version": "1.6.0",
+  "description": "Cloudboard: Pinterest-style Obsidian image boards with two to five columns and local or online images.",
   "main": "main.js",
   "repository": {
     "type": "git",

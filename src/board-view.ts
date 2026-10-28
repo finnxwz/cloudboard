@@ -1,5 +1,5 @@
 import { FileView, Modal, Notice, TFile, setIcon, type App, type TAbstractFile, type WorkspaceLeaf } from 'obsidian';
-import { BOARD_EXTENSION, BOARD_VIEW_TYPE, parseBoard, type BoardCard, type BoardData } from './board-data';
+import { BOARD_VIEW_TYPE, isBoardExtension, parseBoard, type BoardCard, type BoardData, type ColumnCount } from './board-data';
 import { imageUrl } from './image-links';
 import { t } from './i18n';
 
@@ -8,6 +8,7 @@ export interface BoardActions {
   remove(file: TFile, id: string): Promise<void>;
   caption(file: TFile, id: string, title: string): Promise<void>;
   move(file: TFile, id: string, column: number, beforeId: string | null): Promise<void>;
+  columns(file: TFile, columns: ColumnCount): Promise<void>;
 }
 
 interface CardDrag {
@@ -17,7 +18,7 @@ interface CardDrag {
   touchId?: number;
 }
 
-export interface BoardViewOptions { showCaptionBar: boolean }
+export interface BoardViewOptions { showCaptionBar: boolean; defaultColumnCount?: ColumnCount }
 
 interface DropTarget { column: number; beforeId: string | null }
 
@@ -58,7 +59,7 @@ export class ImageBoardView extends FileView {
   getViewType(): string { return BOARD_VIEW_TYPE; }
   getIcon(): string { return 'images'; }
   getDisplayText(): string { return this.file?.basename ?? t('board'); }
-  canAcceptExtension(extension: string): boolean { return extension === BOARD_EXTENSION; }
+  canAcceptExtension(extension: string): boolean { return isBoardExtension(extension); }
   applySettings(): void { this.render(); }
 
   async onLoadFile(file: TFile): Promise<void> { await this.refresh(file); }
@@ -97,7 +98,26 @@ export class ImageBoardView extends FileView {
     const scrollLeft = this.contentEl.querySelector('.pinterest-board-scroll')?.scrollLeft ?? 0;
     this.contentEl.empty();
     const header = this.contentEl.createDiv({ cls: 'pinterest-board-header' });
-    header.createEl('h1', { text: file.basename });
+    const headerMain = header.createDiv({ cls: 'pinterest-board-header-main' });
+    headerMain.createEl('h1', { text: file.basename });
+    const columnControl = headerMain.createEl('label', { cls: 'pinterest-board-column-control' });
+    columnControl.createSpan({ text: t('columnCount') });
+    const columnSelect = columnControl.createEl('select', { attr: { 'aria-label': t('columnCount') } });
+    for (let count = 2; count <= 5; count++) {
+      const option = columnSelect.createEl('option', { text: String(count), attr: { value: String(count) } });
+      option.selected = count === board.columns;
+    }
+    columnSelect.addEventListener('change', async () => {
+      const columns = Number(columnSelect.value) as ColumnCount;
+      columnSelect.disabled = true;
+      try {
+        await this.actions.columns(file, columns);
+        if (this.file === file) await this.refresh(file);
+      } catch (error) {
+        columnSelect.value = String(board.columns);
+        new Notice(t('columnChangeFailed', { error: error instanceof Error ? error.message : String(error) }));
+      } finally { columnSelect.disabled = false; }
+    });
     header.createEl('p', { text: t('boardSubtitle'), cls: 'pinterest-board-subtitle' });
     if (board.sourceNote) {
       const note = header.createEl('button', { text: t('openSourceNote'), cls: 'pinterest-board-note' });
@@ -108,8 +128,11 @@ export class ImageBoardView extends FileView {
       });
     }
     const scroll = this.contentEl.createDiv({ cls: 'pinterest-board-scroll' });
-    const grid = scroll.createDiv({ cls: 'pinterest-board-grid', attr: { 'aria-label': t('fourColumns') } });
-    for (let column = 0; column < 4; column++) {
+    const grid = scroll.createDiv({ cls: 'pinterest-board-grid', attr: { 'aria-label': t('boardColumns', { count: board.columns }) } });
+    grid.style.setProperty('--cloudboard-column-count', String(board.columns));
+    grid.style.minWidth = `${board.columns * 170}px`;
+    grid.style.maxWidth = `${Math.min(1440, board.columns * 360)}px`;
+    for (let column = 0; column < board.columns; column++) {
       const stack = grid.createDiv({ cls: 'pinterest-board-column', attr: { 'aria-label': t('column', { number: column + 1 }) } });
       stack.dataset.column = String(column);
       stack.addEventListener('dragover', event => {
@@ -173,7 +196,7 @@ export class ImageBoardView extends FileView {
       let beforeId: string | null = null;
       if (event.key === 'ArrowLeft') column--;
       if (event.key === 'ArrowRight') column++;
-      if (column < 0 || column > 3) return;
+      if (column < 0 || column >= this.board!.columns) return;
       if (event.key === 'ArrowUp') { if (index === 0) return; beforeId = siblings[index - 1]!.id; }
       if (event.key === 'ArrowDown') { if (index === siblings.length - 1) return; beforeId = siblings[index + 2]?.id ?? null; }
       void this.persistMove(boardFile, card.id, { column, beforeId }, true);

@@ -1,7 +1,8 @@
 import { App, Modal, Notice, Plugin, Setting, SuggestModal, TFile, normalizePath } from 'obsidian';
 import {
-  BOARD_EXTENSION, BOARD_VIEW_TYPE, addBoardCards, createBoardData, newCardId,
-  parseBoard, removeBoardCard, renameBoardPaths, updateBoardCaption, moveBoardCard, type BoardCard, type BoardData,
+  BOARD_EXTENSION, BOARD_EXTENSIONS, BOARD_VIEW_TYPE, DEFAULT_COLUMN_COUNT, addBoardCards, createBoardData, isBoardExtension, newCardId,
+  parseBoard, removeBoardCard, renameBoardPaths, updateBoardCaption, updateBoardColumns, moveBoardCard,
+  type BoardCard, type BoardData,
 } from './board-data';
 import { ImageBoardView, type BoardViewOptions } from './board-view';
 import { IMAGE_EXTENSIONS, validateUpload } from './image-files';
@@ -11,6 +12,7 @@ import { t } from './i18n';
 import { addLocalizedCommand, addLocalizedRibbon } from './i18n-ui';
 
 function message(error: unknown): string { return error instanceof Error ? error.message : String(error); }
+export const ASSET_FOLDER = 'Cloudboard assets';
 
 export function registerBoards(plugin: Plugin, getOptions: () => BoardViewOptions): void {
   const controller = new BoardController(plugin.app);
@@ -19,12 +21,14 @@ export function registerBoards(plugin: Plugin, getOptions: () => BoardViewOption
     remove: (file, id) => controller.update(file, board => removeBoardCard(board, id)),
     caption: (file, id, title) => controller.update(file, board => updateBoardCaption(board, id, title)),
     move: (file, id, column, beforeId) => controller.update(file, board => moveBoardCard(board, id, column, beforeId)),
+    columns: (file, columns) => controller.update(file, board => updateBoardColumns(board, columns)),
   }, getOptions));
-  plugin.registerExtensions([BOARD_EXTENSION], BOARD_VIEW_TYPE);
+  plugin.registerExtensions([...BOARD_EXTENSIONS], BOARD_VIEW_TYPE);
   plugin.register(() => controller.dispose());
   const create = (): void => {
     const file = plugin.app.workspace.getActiveFile();
-    void controller.create(file?.extension === 'md' ? file : null).catch(error => new Notice(message(error)));
+    void controller.create(file?.extension === 'md' ? file : null,
+      getOptions().defaultColumnCount ?? DEFAULT_COLUMN_COUNT).catch(error => new Notice(message(error)));
   };
   addLocalizedRibbon(plugin, 'newBoard', create);
   addLocalizedCommand(plugin, 'convertNote', { id: 'create-image-board', callback: create });
@@ -32,7 +36,7 @@ export function registerBoards(plugin: Plugin, getOptions: () => BoardViewOption
     id: 'add-images-to-board',
     checkCallback: checking => {
       const file = plugin.app.workspace.getActiveFile();
-      if (file?.extension !== BOARD_EXTENSION) return false;
+      if (!file || !isBoardExtension(file.extension)) return false;
       if (!checking) controller.add(file, 0);
       return true;
     },
@@ -50,7 +54,7 @@ export function registerBoards(plugin: Plugin, getOptions: () => BoardViewOption
     if (!(file instanceof TFile)) return;
     if (file.extension === 'md') menu.addItem(item => item.setTitle(t('convertNote')).setIcon('images')
       .onClick(() => { void controller.create(file).catch(error => new Notice(message(error))); }));
-    if (file.extension === BOARD_EXTENSION) menu.addItem(item => item.setTitle(t('addToBoard')).setIcon('image-plus')
+    if (isBoardExtension(file.extension)) menu.addItem(item => item.setTitle(t('addToBoard')).setIcon('image-plus')
       .onClick(() => controller.add(file, 0)));
     if (file.extension === 'canvas') menu.addItem(item => item.setTitle(t('migrateCanvasMenu')).setIcon('images')
       .onClick(() => { void controller.fromCanvas(file).catch(error => new Notice(message(error))); }));
@@ -81,10 +85,10 @@ export class BoardController {
     modal.open();
   }
 
-  async create(source: TFile | null): Promise<void> {
+  async create(source: TFile | null, columns = DEFAULT_COLUMN_COUNT): Promise<void> {
     this.assertActive();
     const title = source ? `${source.basename} Board` : t('newBoard');
-    const board = createBoardData(title, source?.path);
+    const board = createBoardData(title, source?.path, columns);
     await this.createFile(board, source?.parent?.path ?? '');
   }
 
@@ -128,7 +132,9 @@ export class BoardController {
       let local = cache.get(upload);
       if (!local || this.app.vault.getAbstractFileByPath(local.path) !== local) {
         const filename = upload.name.replace(/[\\/:*?"<>|\[\]#^]/g, '-');
-        const path = await this.app.fileManager.getAvailablePathForAttachment(filename, file.path);
+        const folder = normalizePath(`${ASSET_FOLDER}/${file.path.slice(0, -(file.extension.length + 1))}`);
+        await this.ensureFolder(folder);
+        const path = this.availableAssetPath(folder, filename);
         const bytes = await upload.arrayBuffer();
         this.assertActive();
         local = await this.app.vault.createBinary(path, bytes);
@@ -139,8 +145,32 @@ export class BoardController {
     await this.update(file, board => addBoardCards(board, cards));
   }
 
+  private async ensureFolder(path: string): Promise<void> {
+    let current = '';
+    for (const part of path.split('/')) {
+      current = current ? `${current}/${part}` : part;
+      const existing = this.app.vault.getAbstractFileByPath(current);
+      if (existing instanceof TFile) throw new Error(`Cloudboard asset folder is blocked by a file: ${current}`);
+      if (!existing) {
+        try { await this.app.vault.createFolder(current); }
+        catch (error) { if (!this.app.vault.getAbstractFileByPath(current)) throw error; }
+      }
+    }
+  }
+
+  private availableAssetPath(folder: string, filename: string): string {
+    const dot = filename.lastIndexOf('.');
+    const stem = dot > 0 ? filename.slice(0, dot) : filename;
+    const extension = dot > 0 ? filename.slice(dot) : '';
+    let path = `${folder}/${filename}`;
+    for (let suffix = 2; this.app.vault.getAbstractFileByPath(path); suffix++) {
+      path = `${folder}/${stem} ${suffix}${extension}`;
+    }
+    return path;
+  }
+
   async renamePaths(oldPath: string, newPath: string): Promise<void> {
-    for (const file of this.app.vault.getFiles().filter(file => file.extension === BOARD_EXTENSION)) {
+    for (const file of this.app.vault.getFiles().filter(file => isBoardExtension(file.extension))) {
       if (this.disposed) return;
       try {
         // Avoid unnecessary writes when unrelated files are renamed.
@@ -170,11 +200,11 @@ export class BoardController {
         }
         const image = markdownImageUrl(node.text);
         if (!local && image) {
-          board.cards.push({ id: newCardId(), column: board.cards.length % 4,
+          board.cards.push({ id: newCardId(), column: board.cards.length % board.columns,
             kind: 'remote', title: t('onlineImage'), url: image });
         }
       }
-      if (local) board.cards.push({ id: newCardId(), column: board.cards.length % 4,
+      if (local) board.cards.push({ id: newCardId(), column: board.cards.length % board.columns,
         kind: 'local', title: local.basename, file: local.path });
     }
     if (!board.cards.length) throw new Error(t('noCanvasImages'));

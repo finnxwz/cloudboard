@@ -1,20 +1,6 @@
-.pinterest-board-url {
-  width: 100%;
-  min-width: 240px;
-}
-
 .pinterest-status {
   color: var(--text-muted);
   overflow-wrap: anywhere;
-}
-
-.pinterest-image-board-modal .setting-item {
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.pinterest-image-board-modal .setting-item-control {
-  max-width: 100%;
 }
 
 .pinterest-image-links {
@@ -23,25 +9,7 @@
   resize: vertical;
 }
 
-.pinterest-image-upload {
-  width: 100%;
-  margin-block: 12px;
-}
-
-.pinterest-image-selection-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-block: 8px;
-  overflow-wrap: anywhere;
-}
-
-.pinterest-image-selection-row span {
-  min-width: 0;
-}
-
-/* Dedicated image-board view: ordinary four-column masonry, not Canvas. */
+/* Dedicated image-board view: ordinary column masonry, not Canvas. */
 .pinterest-board-view {
   overflow-y: auto;
   padding: 28px 24px 48px;
@@ -50,6 +18,25 @@
 .pinterest-board-header {
   max-width: 1440px;
   margin: 0 auto 28px;
+}
+
+.pinterest-board-header-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.pinterest-board-column-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+
+.pinterest-board-column-control select {
+  width: auto;
 }
 
 .pinterest-board-header h1 {
@@ -70,7 +57,7 @@
 
 .pinterest-board-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--cloudboard-column-count, 4), minmax(0, 1fr));
   gap: 20px;
   min-width: 700px;
   max-width: 1440px;
@@ -309,6 +296,16 @@ button.pinterest-board-action {
 
 .pinterest-board-error {
   color: var(--text-error);
+}
+
+/* Assets stay in the vault for reliable sync and backups, but remain out of
+   Obsidian's file explorer unless the user enables the setting. */
+body.cloudboard-hide-assets .cloudboard-assets-hidden,
+body.cloudboard-hide-assets .workspace-leaf-content[data-type="file-explorer"]
+  .nav-folder[data-path="Cloudboard assets"],
+body.cloudboard-hide-assets .workspace-leaf-content[data-type="file-explorer"]
+  .nav-folder:has(> .nav-folder-title[data-path="Cloudboard assets"]) {
+  display: none !important;
 }
 
 .is-mobile .pinterest-board-view {

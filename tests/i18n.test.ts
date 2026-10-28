@@ -13,6 +13,8 @@ describe('four-language interface', () => {
   it('defaults to English and exposes native language names', () => {
     expect(DEFAULT_LANGUAGE).toBe('en');
     expect(DEFAULT_SETTINGS.language).toBe('en');
+    expect(DEFAULT_SETTINGS.showAssetFolder).toBe(false);
+    expect(DEFAULT_SETTINGS.defaultColumnCount).toBe(4);
     expect(t('showCaptionBar')).toBe('Show caption bar');
     expect(LANGUAGE_NAMES).toEqual({ en: 'English', de: 'Deutsch', es: 'Español', fr: 'Français' });
   });

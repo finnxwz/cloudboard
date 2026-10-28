@@ -1,6 +1,10 @@
 import { requestUrl } from 'obsidian';
-import { isPinterestHostname } from './pinterest';
 import { t } from './i18n';
+
+function isPinterestHostname(hostname: string): boolean {
+  const host = hostname.toLowerCase();
+  return host === 'pinterest.com' || host.endsWith('.pinterest.com');
+}
 
 export interface OnlineImage {
   imageUrl: string;

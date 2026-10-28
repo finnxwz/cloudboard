@@ -27,7 +27,7 @@ beforeEach(() => {
 
 async function openBoard(board: BoardData, options: BoardViewOptions = { showCaptionBar: true }) {
   const file = new TFile();
-  file.path = 'Tattoo-Ideen.pboard';
+  file.path = 'Tattoo-Ideen.cloud';
   file.basename = 'Tattoo-Ideen';
   const local = new TFile();
   local.path = 'Photos/a.jpg';
@@ -37,7 +37,8 @@ async function openBoard(board: BoardData, options: BoardViewOptions = { showCap
     getResourcePath: vi.fn(() => 'app://local/Photos/a.jpg'),
   } };
   const actions = { add: vi.fn(), remove: vi.fn().mockResolvedValue(undefined),
-    caption: vi.fn().mockResolvedValue(undefined), move: vi.fn().mockResolvedValue(undefined) };
+    caption: vi.fn().mockResolvedValue(undefined), move: vi.fn().mockResolvedValue(undefined),
+    columns: vi.fn().mockResolvedValue(undefined) };
   const view = new ImageBoardView({ app } as unknown as WorkspaceLeaf, actions, () => options);
   view.file = file;
   await view.onLoadFile(file);
@@ -230,9 +231,10 @@ describe('actual board view rendering', () => {
       expect(view.contentEl.children).toHaveLength(0);
     } finally { vi.useRealTimers(); }
   });
-  it('shows exactly four columns and four central plus frames, without Canvas', async () => {
+  it('defaults to exactly four columns and four central plus frames, without Canvas', async () => {
     const { view, actions, file } = await openBoard(createBoardData('Tattoo-Ideen'));
     expect(view.getViewType()).toBe('cloudboard-view');
+    expect(view.canAcceptExtension('cloud')).toBe(true);
     expect(view.canAcceptExtension('pboard')).toBe(true);
     expect(view.canAcceptExtension('canvas')).toBe(false);
     expect(view.contentEl.querySelectorAll('.pinterest-board-column')).toHaveLength(4);
@@ -242,6 +244,22 @@ describe('actual board view rendering', () => {
     buttons[2]!.click();
     expect(actions.add).toHaveBeenCalledWith(file, 2);
     expect(view.contentEl.querySelector('.canvas-wrapper')).toBeNull();
+  });
+
+  it('renders two to five columns and persists the selected count per board', async () => {
+    const two = createBoardData('Two', undefined, 2);
+    const openedTwo = await openBoard(two);
+    expect(openedTwo.view.contentEl.querySelectorAll('.pinterest-board-column')).toHaveLength(2);
+    expect(openedTwo.view.contentEl.querySelector('.pinterest-board-grid')?.getAttribute('aria-label')).toContain('2');
+
+    const five = createBoardData('Five', undefined, 5);
+    const { view, actions, file } = await openBoard(five);
+    expect(view.contentEl.querySelectorAll('.pinterest-board-column')).toHaveLength(5);
+    const select = view.contentEl.querySelector<HTMLSelectElement>('.pinterest-board-column-control select')!;
+    expect(select.value).toBe('5');
+    select.value = '3';
+    select.dispatchEvent(new Event('change'));
+    await vi.waitFor(() => expect(actions.columns).toHaveBeenCalledWith(file, 3));
   });
 
   it('renders local and online images in their selected columns and keeps plus slots', async () => {
