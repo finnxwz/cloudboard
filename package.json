@@ -1,6 +1,6 @@
 {
   "name": "cloudboard",
-  "version": "1.7.8",
+  "version": "1.7.9",
   "description": "Cloudboard: Pinterest-style Obsidian image boards with two to five columns and local or online images.",
   "main": "main.js",
   "repository": {

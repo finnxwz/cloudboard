@@ -34,7 +34,7 @@ Every board is stored as a standalone `.cloud` file. A Markdown note can be conv
 
 ## 💻 Installation
 
-Requires **Obsidian 1.5.7 or newer**.
+Requires **Obsidian 1.13.0 or newer**.
 
 **directly in Obsidian:**
 - Cloudboard is not yet in the official Community plugins directory. Once listed, install it via Settings → Community plugins → Browse → search for **Cloudboard** → *Install* → **Enable**.

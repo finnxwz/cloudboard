@@ -14,10 +14,15 @@ export interface OnlineImage {
   height: number;
 }
 
+function hasControlCharacters(value: string): boolean {
+  for (let index = 0; index < value.length; index++) if (value.charCodeAt(index) <= 31) return true;
+  return false;
+}
+
 export function imageUrl(input: string): string {
   let url: URL;
   try { url = new URL(input.trim()); } catch { throw new Error(t('invalidImageUrl')); }
-  if (url.protocol !== 'https:' || url.username || url.password || /[\u0000-\u001f]/.test(input)) {
+  if (url.protocol !== 'https:' || url.username || url.password || hasControlCharacters(input)) {
     throw new Error(t('httpsOnly'));
   }
   return url.href.replace(/[<>]/g, c => encodeURIComponent(c));
@@ -85,17 +90,17 @@ export async function resolveImageLink(input: string): Promise<OnlineImage> {
   const match = /^\/pin\/(\d+)\/?$/.exec(url.pathname);
   if (!match) throw new Error(t('noBoardLink'));
   const sourceUrl = `https://www.pinterest.com/pin/${match[1]}/`;
-  let timer: ReturnType<typeof setTimeout> | undefined;
+  let timer: number | undefined;
   try {
     const response = await Promise.race([
       requestUrl({ url: sourceUrl, throw: false, headers: { Accept: 'text/html' } }),
       new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new Error(t('pinTimeout'))), 30_000);
+        timer = window.setTimeout(() => reject(new Error(t('pinTimeout'))), 30_000);
       }),
     ]);
     if (response.status !== 200) {
       throw new Error(t('pinUnavailable', { status: response.status }));
     }
     return parsePinPreview(response.text, sourceUrl);
-  } finally { if (timer !== undefined) clearTimeout(timer); }
+  } finally { if (timer !== undefined) window.clearTimeout(timer); }
 }

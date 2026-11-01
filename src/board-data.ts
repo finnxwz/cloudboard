@@ -43,7 +43,13 @@ export function isColumnCount(value: unknown): value is ColumnCount {
 
 function vaultPath(value: unknown): boolean {
   return typeof value === 'string' && value.length > 0 && !/^[\\/]/.test(value) &&
-    !/[\\:\u0000-\u001f]/.test(value) && !value.split('/').some(p => !p || p === '.' || p === '..');
+    !value.includes('\\') && !value.includes(':') && !hasControlCharacters(value) &&
+    !value.split('/').some(p => !p || p === '.' || p === '..');
+}
+
+function hasControlCharacters(value: string): boolean {
+  for (let index = 0; index < value.length; index++) if (value.charCodeAt(index) <= 31) return true;
+  return false;
 }
 
 export function parseBoard(raw: string): BoardData {

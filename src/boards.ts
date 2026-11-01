@@ -153,7 +153,9 @@ export class BoardController {
       progress(t('copyingPhoto', { number: index + 1 }));
       let local = cache.get(upload);
       if (!local || this.app.vault.getAbstractFileByPath(local.path) !== local) {
-        const filename = upload.name.replace(/[\\/:*?"<>|\[\]#^]/g, '-');
+        const invalidFilenameCharacters = new Set('\\/:*?"<>|[]#^');
+        const filename = Array.from(upload.name, character =>
+          invalidFilenameCharacters.has(character) ? '-' : character).join('');
         const folder = normalizePath(`${ASSET_FOLDER}/${file.path.slice(0, -(file.extension.length + 1))}`);
         await this.ensureFolder(folder);
         const path = this.availableAssetPath(folder, filename);

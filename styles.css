@@ -258,7 +258,7 @@ button.pinterest-board-action {
 }
 
 .pinterest-board-card:focus-visible > .pinterest-board-card-overlay,
-.pinterest-board-card:has(:focus-visible) > .pinterest-board-card-overlay,
+.pinterest-board-card:focus-within > .pinterest-board-card-overlay,
 .pinterest-board-card.is-actions-visible > .pinterest-board-card-overlay {
   opacity: 1;
   pointer-events: auto;
@@ -334,13 +334,13 @@ button.pinterest-board-action {
 }
 
 .pinterest-add-image-modal .pinterest-internet-field {
-  border-bottom: 0 !important;
+  border-bottom: 0;
 }
 
 .pinterest-add-image-modal .pinterest-online-submit {
   padding-top: 0;
   padding-bottom: 18px;
-  border-top: 0 !important;
+  border-top: 0;
   border-bottom: 1px solid var(--background-modifier-border);
 }
 
@@ -354,12 +354,9 @@ button.pinterest-board-action {
 
 /* Assets stay in the vault for reliable sync and backups, but remain out of
    Obsidian's file explorer unless the user enables the setting. */
-body.cloudboard-hide-assets .cloudboard-assets-hidden,
 body.cloudboard-hide-assets .workspace-leaf-content[data-type="file-explorer"]
-  .nav-folder[data-path="Cloudboard assets"],
-body.cloudboard-hide-assets .workspace-leaf-content[data-type="file-explorer"]
-  .nav-folder:has(> .nav-folder-title[data-path="Cloudboard assets"]) {
-  display: none !important;
+  .nav-folder.cloudboard-assets-hidden {
+  display: none;
 }
 
 .is-mobile .pinterest-board-view {

@@ -1,4 +1,4 @@
-import { App, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Notice, Plugin, PluginSettingTab, type SettingDefinitionItem } from 'obsidian';
 import { ASSET_FOLDER, registerBoards } from './boards';
 import { ImageBoardView } from './board-view';
 import { BOARD_VIEW_TYPE, isColumnCount } from './board-data';
@@ -55,10 +55,13 @@ export default class CloudboardPlugin extends Plugin {
       }
       return;
     }
-    for (const element of Array.from(document.querySelectorAll('[data-path]')) as HTMLElement[]) {
+    for (const element of Array.from(document.querySelectorAll('[data-path]'))) {
+      if (!(element instanceof HTMLElement)) continue;
       if (element.dataset.path !== ASSET_FOLDER) continue;
-      const folder = element.matches('.nav-folder') ? element : element.closest('.nav-folder') as HTMLElement | null;
-      (folder ?? element).classList.add('cloudboard-assets-hidden');
+      const closestFolder = element.closest('.nav-folder');
+      const folder = element.matches('.nav-folder') ? element
+        : closestFolder instanceof HTMLElement ? closestFolder : element;
+      folder.classList.add('cloudboard-assets-hidden');
     }
   }
 
@@ -77,43 +80,46 @@ export default class CloudboardPlugin extends Plugin {
 class CloudboardSettingsTab extends PluginSettingTab {
   constructor(app: App, private plugin: CloudboardPlugin) { super(app, plugin); }
 
-  display(): void {
-    this.containerEl.empty();
-    new Setting(this.containerEl).setName(t('language')).setDesc(t('languageDescription'))
-      .addDropdown(dropdown => dropdown.addOptions(LANGUAGE_NAMES).setValue(this.plugin.settings.language).onChange(async value => {
-        this.plugin.settings.language = resolveLanguage(value);
-        setLanguage(this.plugin.settings.language);
-        this.plugin.refreshBoardViews();
-        this.display();
-        await this.saveSettings();
-      }));
-    new Setting(this.containerEl).setName(t('showCaptionBar'))
-      .setDesc(t('showCaptionBarDescription'))
-      .addToggle(toggle => toggle.setValue(this.plugin.settings.showCaptionBar).onChange(async value => {
-        this.plugin.settings.showCaptionBar = value;
-        this.plugin.refreshBoardViews();
-        await this.saveSettings();
-      }));
-    new Setting(this.containerEl).setName(t('showAssetFolder'))
-      .setDesc(t('showAssetFolderDescription'))
-      .addToggle(toggle => toggle.setValue(this.plugin.settings.showAssetFolder).onChange(async value => {
-        this.plugin.settings.showAssetFolder = value;
-        this.plugin.applyAssetFolderVisibility();
-        await this.saveSettings();
-      }));
-    new Setting(this.containerEl).setName(t('columnCount'))
-      .setDesc(t('columnCountDescription'))
-      .addDropdown(dropdown => dropdown.addOptions({ '2': '2', '3': '3', '4': '4', '5': '5' })
-        .setValue(String(this.plugin.settings.columnCount)).onChange(async value => {
-          const columns = Number(value);
-          if (!isColumnCount(columns)) return;
-          this.plugin.settings.columnCount = columns;
-          this.plugin.refreshBoardViews();
-          await this.saveSettings();
-        }));
+  getSettingDefinitions(): SettingDefinitionItem[] {
+    return [
+      { name: t('language'), desc: t('languageDescription'),
+        control: { type: 'dropdown', key: 'language', defaultValue: DEFAULT_SETTINGS.language, options: LANGUAGE_NAMES } },
+      { name: t('showCaptionBar'), desc: t('showCaptionBarDescription'),
+        control: { type: 'toggle', key: 'showCaptionBar', defaultValue: DEFAULT_SETTINGS.showCaptionBar } },
+      { name: t('showAssetFolder'), desc: t('showAssetFolderDescription'),
+        control: { type: 'toggle', key: 'showAssetFolder', defaultValue: DEFAULT_SETTINGS.showAssetFolder } },
+      { name: t('columnCount'), desc: t('columnCountDescription'),
+        control: { type: 'dropdown', key: 'columnCount', defaultValue: String(DEFAULT_SETTINGS.columnCount),
+          options: { '2': '2', '3': '3', '4': '4', '5': '5' } } },
+    ];
   }
 
-  private async saveSettings(): Promise<void> {
+  getControlValue(key: string): unknown {
+    if (key === 'columnCount') return String(this.plugin.settings.columnCount);
+    if (key === 'language' || key === 'showCaptionBar' || key === 'showAssetFolder') {
+      return this.plugin.settings[key];
+    }
+    return undefined;
+  }
+
+  async setControlValue(key: string, value: unknown): Promise<void> {
+    if (key === 'language') {
+      this.plugin.settings.language = resolveLanguage(value);
+      setLanguage(this.plugin.settings.language);
+      this.plugin.refreshBoardViews();
+      this.update();
+    } else if (key === 'showCaptionBar' && typeof value === 'boolean') {
+      this.plugin.settings.showCaptionBar = value;
+      this.plugin.refreshBoardViews();
+    } else if (key === 'showAssetFolder' && typeof value === 'boolean') {
+      this.plugin.settings.showAssetFolder = value;
+      this.plugin.applyAssetFolderVisibility();
+    } else if (key === 'columnCount') {
+      const columns = Number(value);
+      if (!isColumnCount(columns)) return;
+      this.plugin.settings.columnCount = columns;
+      this.plugin.refreshBoardViews();
+    } else return;
     try { await this.plugin.persist(); }
     catch (error) { new Notice(t('settingsSaveFailed', { error: message(error) })); }
   }

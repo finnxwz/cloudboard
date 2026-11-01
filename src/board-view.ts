@@ -46,7 +46,7 @@ export class ImageBoardView extends FileView {
       }
     });
     this.registerEvent(this.app.vault.on('modify', file => {
-      if (file === this.file) void this.refresh(file as TFile);
+      if (file === this.file && file instanceof TFile) void this.refresh(file);
       else if (this.file && this.board?.cards.some(card => card.kind === 'local' && card.file === file.path)) {
         void this.refresh(this.file);
       }
@@ -246,7 +246,7 @@ export class ImageBoardView extends FileView {
           article.classList.add('is-actions-visible');
           return;
         }
-        new BoardImagePreview(this.app, src!, card.title).open();
+        new BoardImagePreview(this.app, src, card.title).open();
       });
     } else { image.hidden = true; error.hidden = false; }
     const footer = article.createDiv({ cls: showCaptionBar ? 'pinterest-board-card-footer' : 'pinterest-board-card-overlay' });
@@ -261,18 +261,20 @@ export class ImageBoardView extends FileView {
       type: 'button', 'aria-label': t('removeCardLabel'), title: t('removeCard'),
     } });
     setIcon(remove, 'trash-2');
-    remove.addEventListener('click', async () => {
+    const removeCard = async (): Promise<void> => {
       remove.disabled = true;
       try { await this.actions.remove(boardFile, card.id); }
       catch (error) { new Notice(t('removeFailed', { error: error instanceof Error ? error.message : String(error) })); remove.disabled = false; }
-    });
+    };
+    remove.addEventListener('click', () => { void removeCard(); });
   }
 
   private markDrop(stack: HTMLElement, y: number): void {
     if (!this.drag) return;
     this.clearDrop();
+    const dragId = this.drag.id;
     const before = Array.from(stack.querySelectorAll<HTMLElement>('.pinterest-board-card'))
-      .find(element => element.dataset.cardId !== this.drag!.id && y < element.getBoundingClientRect().top + element.getBoundingClientRect().height / 2);
+      .find(element => element.dataset.cardId !== dragId && y < element.getBoundingClientRect().top + element.getBoundingClientRect().height / 2);
     this.dropTarget = { column: Number(stack.dataset.column), beforeId: before?.dataset.cardId ?? null };
     if (before) before.classList.add('pinterest-board-drop-before');
     else stack.classList.add('pinterest-board-drop-end');
@@ -325,7 +327,7 @@ export class ImageBoardView extends FileView {
       this.cancelTouchHold?.();
       const touch = event.touches[0]!;
       pending = { id: touch.identifier, x: touch.clientX, y: touch.clientY };
-      const timer = setTimeout(() => {
+      const timer = window.setTimeout(() => {
         const hold = pending;
         pending = null;
         this.cancelTouchHold = null;
@@ -333,7 +335,7 @@ export class ImageBoardView extends FileView {
         this.drag = { id: card.id, file, element: article, touchId: hold.id };
         article.classList.add('is-dragging');
       }, 450);
-      this.cancelTouchHold = () => { clearTimeout(timer); pending = null; };
+      this.cancelTouchHold = () => { window.clearTimeout(timer); pending = null; };
     }, { passive: true });
     const targetAt = (event: Pick<Touch, 'clientX' | 'clientY'>): void => {
       const stack = this.contentEl.ownerDocument.elementFromPoint(event.clientX, event.clientY)
@@ -393,7 +395,7 @@ export class EditCaptionModal extends Modal {
     cancel.addEventListener('click', () => this.close());
     const save = buttons.createEl('button', { text: t('save'), attr: { type: 'submit' } });
     let busy = false;
-    form.addEventListener('submit', async event => {
+    const submitCaption = async (event: Event): Promise<void> => {
       event.preventDefault();
       if (busy) return;
       busy = true;
@@ -401,7 +403,8 @@ export class EditCaptionModal extends Modal {
       try { await this.saveCaption(input.value); this.close(); }
       catch (error) { status.setText(error instanceof Error ? error.message : String(error)); }
       finally { busy = false; input.disabled = save.disabled = cancel.disabled = false; }
-    });
+    };
+    form.addEventListener('submit', event => { void submitCaption(event); });
     input.addEventListener('keydown', event => {
       if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) { event.preventDefault(); form.requestSubmit(); }
     });

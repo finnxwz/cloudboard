@@ -1,9 +1,9 @@
 {
   "id": "cloudboard",
   "name": "Cloudboard",
-  "version": "1.7.8",
-  "minAppVersion": "1.5.7",
-  "description": "Create Pinterest-style image boards with local and online images, without requiring the use of Obsidian Canvas.",
+  "version": "1.7.9",
+  "minAppVersion": "1.13.0",
+  "description": "Create Pinterest-style image boards with local and online images, without requiring Canvas.",
   "author": "Finn-Christopher Krause",
   "authorUrl": "https://github.com/finnxwz",
   "isDesktopOnly": false
