@@ -3,6 +3,7 @@
 **Create Pinterest-style image boards with both local and online images without requiring the use of Obsidian Canvas.**
 
 Cloudboard provides a clean, pinterest-styke image board for your Obsidian vault with full GIF support. Collect, organize, and browse every image in one place.
+
 ![Cloudboard](https://raw.githubusercontent.com/finnxwz/cloudboard/main/cloudboard-demo-1.gif)
 ## 🖱️ How to use
 
