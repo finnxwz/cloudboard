@@ -1,61 +1,39 @@
-# Cloudboard
+![Cloudboard](https://raw.githubusercontent.com/finnxwz/cloudboard/main/cloudboard-banner.png)
 
-**Create Pinterest-style image boards with local and online images, without requiring the use of Obsidian Canvas.**
+**Create Pinterest-style image boards with both local and online images without requiring the use of Obsidian Canvas.**
 
-Every board is stored as a standalone `.cloud` file. A Markdown note can be converted into a board; once the board has been created and opened successfully, the source note is moved to Obsidian’s configured trash. Existing `.pboard` files from earlier versions remain supported.
+Cloudboard provides a clean, pinterest-styke image board for your Obsidian vault with full GIF support. Collect, organize, and browse every image in one place.
+![Cloudboard](https://raw.githubusercontent.com/finnxwz/cloudboard/main/cloudboard-demo-1.gif)
+## 🖱️ How to use
 
-## 💡 How it works
+- After installing and activating Cloudboard, right-click a Markdown note and select **“Convert note into an image board”**. Cloudboard creates a same-named board and moves the original note to Obsidian’s configured trash.
+- New and empty boards open automatically in editing mode. Click an **“Add image”** card to add photos from your device or vault, or paste a direct online image link.
+- Click the **pencil** in the upper-right corner to **activate editing mode** and add more images, then click the **check mark** to **return to viewing mode.**
+- Reorder images by dragging them within or between columns. On touch devices, press and hold before dragging; keyboard users can move focused cards with the arrow keys.
 
-- Convert a Markdown note from its context menu or the Command Palette. Cloudboard creates `<note name>.cloud` in the same folder, opens it, and only then moves the original note to Obsidian’s configured trash. Alternatively, create an empty standalone board from the ribbon. Choose globally between two and five columns in the plugin settings; four is the default.
-- Empty boards automatically open in editing mode so the “Add image” cards are immediately discoverable. Once a board contains images, it opens in a clean viewing mode without empty add cards. Use the monochrome pencil in the top-right corner to enter editing mode and the check mark to return to the clean board view.
-- Add photos **from your device**, **from your vault**, as a **direct HTTPS image** or as a **public Pinterest pin preview**. Device photos are collected below `Cloudboard assets/<board path>/`, so they do not appear individually between your notes. Vault images are embedded without being moved or duplicated.
-- Online images stay online and are not downloaded into your vault. They need an internet connection and can disappear if the image host removes them.
-- Click an image for a large preview. The pencil on an image card edits its caption; clearing the caption hides it. Source links are stored internally but never shown.
-- With the caption bar enabled, captions and actions appear below the photo. Turn it off to show only the photo, with edit and delete actions appearing on hover or tap.
-- Drag cards to reorder them within a column or move them to another column. On touch screens, hold a card for a moment and drag. Keyboard users can focus a card and move it with the arrow keys.
-- The trash icon removes a card from the board, **never the image file** from your vault.
-- Boards keep the globally selected number of columns on narrow screens and scroll horizontally instead of switching automatically.
-- Existing Canvases can be used as an image source: right-click a `.canvas` file and choose **Import as an image board**. Cloudboard copies recognizable image cards and embedded images into a new `.cloud` board. Canvas layout, connections, text and other nodes are not transferred. The original `.canvas` file stays unchanged.
-- The interface is available in **English (default), German, Spanish and French**. Switching the language updates open boards and command names; your own captions and notes are never translated.
-- Cloudboard does not import or synchronize complete Pinterest boards. Individual public pin previews may still be blocked by Pinterest; in that case, copy the direct image address (`https://i.pinimg.com/...`) instead of the pin page URL.
-- Cloudboard is not affiliated with Pinterest. Image rights remain with their respective owners.
+![Cloudboard](https://raw.githubusercontent.com/finnxwz/cloudboard/main/cloudboard-demo-2.gif)
+## 💡 Additional info
 
-## ⚙️ Settings and commands
+I’ve added some settings to the plugin menu that let you personalize your Cloudboard experience:
+- **Columns:** choose whether your boards use two, three, four or five columns. New installations use four columns by default.
+- **Show caption bar:** display captions and image actions below each photo, or disable the caption bar for a cleaner image-only layout.
+- **Show asset folder in file explorer:** reveal or hide the `Cloudboard assets` folder. Local photos must remain stored inside the vault so they can be synchronized and displayed across devices. Obsidian would normally show every one of these files in the file explorer, so Cloudboard hides the dedicated asset folder by default while keeping its contents safely stored and synchronized.
+- **Language:** choose between English, German, Spanish and French. Your own captions, filenames and other content are not translated.
 
-- **Language**: choose English, German, Spanish or French.
-- **Show caption bar**: show captions and actions below the photo, or hide the bar and reveal actions on hover/tap.
-- **Show asset folder in file explorer**: reveal `Cloudboard assets` in Obsidian’s file explorer. It is hidden by default while the images remain stored and synced in the vault.
-- **Columns**: choose globally whether Cloudboard boards use two, three, four or five columns. Four columns are used by default. When reducing the count, cards from removed columns move into the last remaining column.
-- **Cloudboard: New image board**: create a standalone board from the ribbon or Command Palette. No Markdown note is needed.
-- **Cloudboard: Convert note into an image board**: replace the active Markdown note with a same-named `.cloud` board. The note is moved to the configured trash only after successful board creation.
-- **Cloudboard: Add image to board**: right-click a `.cloud` file (or a legacy `.pboard` file) or use the Command Palette to open the image picker.
-- **Cloudboard: Convert existing Canvas into an image board**: right-click a `.canvas` file or use the Command Palette. This imports only recognizable images; layout, connections, text and other Canvas nodes are not transferred. The source Canvas is not modified.
-- Supported local formats: JPG/JPEG, PNG, GIF, WebP, AVIF and BMP, up to 25 MB per image. HEIC and SVG are not supported.
-
-## 💻 Installation
-
-Requires **Obsidian 1.13.0 or newer**.
-
-**directly in Obsidian:**
-- Cloudboard is not yet in the official Community plugins directory. Once listed, install it via Settings → Community plugins → Browse → search for **Cloudboard** → *Install* → **Enable**.
-
-**via GitHub:**
-- Download `manifest.json`, `main.js` and `styles.css` from the [latest release](https://github.com/finnxwz/cloudboard/releases/latest).
-- Copy them into `<your vault>/.obsidian/plugins/cloudboard/`.
-- Reload Obsidian and enable **Cloudboard** under *Settings → Community plugins*.
-
-**via BRAT:**
-- Install [BRAT](https://github.com/TfTHacker/obsidian42-brat), run *Add Beta plugin* and enter `finnxwz/cloudboard`.
-
-Upgrading from **Import From Pinterest**: existing `.pboard` boards remain compatible and can still be opened and edited. New boards use `.cloud`. Install Cloudboard in the new `cloudboard` plugin folder; settings from the old installation are not migrated automatically.
-
-## 😎 You might also like some other plugins I've made:
-
+## 💻 You might also like some other plugins I've made:
 - **[TidyTasks](obsidian://show-plugin?id=tidytasks)** - Automatically move completed tasks to the bottom of each Markdown task list, keeping subtasks attached and surrounding text in place.
 - **[Notemoji](obsidian://show-plugin?id=notemoji)** - Assign emoji icons to notes and folders in the file explorer to make your vault feel a little cozier.
 
-Cloudboard is designed to work across Windows, macOS, Android, and iOS. Mobile testing on real devices is still ongoing.
+Thank you for using my plugins and supporting my work! My plugins are designed to work across Windows, macOS, Android, and iOS.
+
 
 ## ⚠️ Feedback and support
 
-Found a bug or have a suggestion? Open an issue in this repository's **GitHub Issues** tab. Include your Obsidian version, device/platform, the steps you took and what you expected to happen. Please remove private note content and personal image URLs before sharing examples.
+Found a bug or have a suggestion? Open an issue in this repository's **GitHub Issues** tab. Include your Obsidian version, device/platform, a small Markdown example and what you expected to happen. Please remove private note content before sharing examples.
+
+Thanks for using my plugins and supporting my work! - Finn
+
+**Disclaimer:** Cloudboard is not affiliated with, endorsed by or sponsored by Pinterest.
+
+
+
