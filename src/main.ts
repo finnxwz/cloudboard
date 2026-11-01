@@ -14,14 +14,18 @@ export default class CloudboardPlugin extends Plugin {
 
   async onload(): Promise<void> {
     const saved = await this.loadData() as { settings?: Partial<Settings> } | null;
+    const currentSettings = saved?.settings?.settingsVersion === DEFAULT_SETTINGS.settingsVersion;
     this.settings = {
+      settingsVersion: DEFAULT_SETTINGS.settingsVersion,
       language: resolveLanguage(saved?.settings?.language),
       showCaptionBar: typeof saved?.settings?.showCaptionBar === 'boolean'
         ? saved.settings.showCaptionBar : DEFAULT_SETTINGS.showCaptionBar,
       showAssetFolder: typeof saved?.settings?.showAssetFolder === 'boolean'
         ? saved.settings.showAssetFolder : DEFAULT_SETTINGS.showAssetFolder,
-      defaultColumnCount: isColumnCount(saved?.settings?.defaultColumnCount)
-        ? saved.settings.defaultColumnCount : DEFAULT_SETTINGS.defaultColumnCount,
+      // Earlier development builds used a per-board/default value. Do not turn
+      // that stale test value into the new global preference.
+      columnCount: currentSettings && isColumnCount(saved?.settings?.columnCount)
+        ? saved.settings.columnCount : DEFAULT_SETTINGS.columnCount,
     };
     setLanguage(this.settings.language);
     this.applyAssetFolderVisibility();
@@ -97,13 +101,14 @@ class CloudboardSettingsTab extends PluginSettingTab {
         this.plugin.applyAssetFolderVisibility();
         await this.saveSettings();
       }));
-    new Setting(this.containerEl).setName(t('defaultColumnCount'))
-      .setDesc(t('defaultColumnCountDescription'))
+    new Setting(this.containerEl).setName(t('columnCount'))
+      .setDesc(t('columnCountDescription'))
       .addDropdown(dropdown => dropdown.addOptions({ '2': '2', '3': '3', '4': '4', '5': '5' })
-        .setValue(String(this.plugin.settings.defaultColumnCount)).onChange(async value => {
+        .setValue(String(this.plugin.settings.columnCount)).onChange(async value => {
           const columns = Number(value);
           if (!isColumnCount(columns)) return;
-          this.plugin.settings.defaultColumnCount = columns;
+          this.plugin.settings.columnCount = columns;
+          this.plugin.refreshBoardViews();
           await this.saveSettings();
         }));
   }

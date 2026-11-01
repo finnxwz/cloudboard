@@ -51,6 +51,7 @@ describe('board creation and persistence', () => {
     const { controller, files, content, vault } = vaultFixture();
     await controller.create();
     const file = files.get('Neues Bilderboard.cloud')!;
+    expect(parseBoard(content.get(file)!).columns).toBe(4);
     await controller.saveImages(file, 0, ['https://example.org/a.jpg', 'https://example.org/b.jpg'], [], [], '', new Map(), () => {});
     const [a, b] = parseBoard(content.get(file)!).cards;
     await controller.update(file, board => updateBoardCaption(board, a!.id, 'My new caption'));

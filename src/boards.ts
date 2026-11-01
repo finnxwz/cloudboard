@@ -28,7 +28,7 @@ export function registerBoards(plugin: Plugin, getOptions: () => BoardViewOption
   const create = (): void => {
     const folder = plugin.app.workspace.getActiveFile()?.parent?.path ?? '';
     void controller.create(folder,
-      getOptions().defaultColumnCount ?? DEFAULT_COLUMN_COUNT).catch(error => new Notice(message(error)));
+      getOptions().columnCount ?? DEFAULT_COLUMN_COUNT).catch(error => new Notice(message(error)));
   };
   addLocalizedRibbon(plugin, 'newBoard', create);
   addLocalizedCommand(plugin, 'newBoard', { id: 'create-image-board', callback: create });
@@ -37,7 +37,7 @@ export function registerBoards(plugin: Plugin, getOptions: () => BoardViewOption
     checkCallback: checking => {
       const file = plugin.app.workspace.getActiveFile();
       if (file?.extension !== 'md') return false;
-      if (!checking) void controller.convert(file, getOptions().defaultColumnCount ?? DEFAULT_COLUMN_COUNT)
+      if (!checking) void controller.convert(file, getOptions().columnCount ?? DEFAULT_COLUMN_COUNT)
         .catch(error => new Notice(message(error)));
       return true;
     },
@@ -63,7 +63,7 @@ export function registerBoards(plugin: Plugin, getOptions: () => BoardViewOption
   plugin.registerEvent(plugin.app.workspace.on('file-menu', (menu, file) => {
     if (!(file instanceof TFile)) return;
     if (file.extension === 'md') menu.addItem(item => item.setTitle(t('convertNote')).setIcon('images')
-      .onClick(() => { void controller.convert(file, getOptions().defaultColumnCount ?? DEFAULT_COLUMN_COUNT)
+      .onClick(() => { void controller.convert(file, getOptions().columnCount ?? DEFAULT_COLUMN_COUNT)
         .catch(error => new Notice(message(error))); }));
     if (isBoardExtension(file.extension)) menu.addItem(item => item.setTitle(t('addToBoard')).setIcon('image-plus')
       .onClick(() => controller.add(file, 0)));
@@ -270,8 +270,13 @@ class AddBoardImageModal extends Modal {
       } catch (error) { status.setText(message(error)); }
       finally { this.busy = false; for (const control of controls) control.disabled = false; }
     };
-    new Setting(this.contentEl).setName(t('caption')).setDesc(t('captionDescription'))
-      .addText(text => { text.onChange(value => { caption = value.trim(); }); controls.push(text.inputEl); });
+    const captionSetting = new Setting(this.contentEl).setName(t('caption')).setDesc(t('captionDescription'))
+      .addText(text => {
+        text.inputEl.addClass('pinterest-caption-field');
+        text.onChange(value => { caption = value.trim(); });
+        controls.push(text.inputEl);
+      });
+    captionSetting.settingEl.addClass('pinterest-add-image-field');
     const upload = this.contentEl.createEl('input', { cls: 'pinterest-board-file-input', attr: {
       type: 'file', accept: '.jpg,.jpeg,.png,.gif,.webp,.avif,.bmp', multiple: '', 'aria-label': t('chooseDevicePhotos'),
     } });
@@ -282,14 +287,14 @@ class AddBoardImageModal extends Modal {
       upload.value = '';
     });
     const choices = this.contentEl.createDiv({ cls: 'pinterest-board-choices' });
-    const device = choices.createEl('button', { text: t('chooseDevice'), cls: 'mod-cta' });
+    const device = choices.createEl('button', { text: t('chooseDevice') });
     device.addEventListener('click', () => upload.click());
     controls.push(device);
     const vault = choices.createEl('button', { text: t('chooseVault') });
     vault.addEventListener('click', () => new VaultImagePicker(this.app, file => { void submit([], [file], []); }).open());
     controls.push(vault);
     let links = '';
-    new Setting(this.contentEl).setName(t('internetLink'))
+    const internetSetting = new Setting(this.contentEl).setName(t('internetLink'))
       .setDesc(t('internetLinkDescription'))
       .addTextArea(text => {
         text.setPlaceholder('https://i.pinimg.com/originals/…jpg').onChange(value => { links = value; });
@@ -298,14 +303,20 @@ class AddBoardImageModal extends Modal {
         text.inputEl.setAttribute('aria-label', t('onlineAddresses'));
         controls.push(text.inputEl);
       });
-    new Setting(this.contentEl).addButton(button => {
-      button.setButtonText(t('addOnlineImage')).setCta().onClick(() => {
+    internetSetting.settingEl.addClass('pinterest-add-image-field', 'pinterest-internet-field');
+    const onlineSubmit = new Setting(this.contentEl).addButton(button => {
+      button.setButtonText(t('addOnlineImage')).onClick(() => {
         void submit(links.split(/\r?\n/).map(link => link.trim()).filter(Boolean), [], []);
       });
       controls.push(button.buttonEl);
     });
-    this.contentEl.createEl('p', { cls: 'pinterest-status', text:
-      t('onlineHint') });
+    onlineSubmit.settingEl.addClass('pinterest-online-submit');
+    // Move the live status below the controls so validation and progress remain
+    // close to the final action rather than interrupting the form introduction.
+    this.contentEl.append(status);
+    const hints = this.contentEl.createDiv({ cls: 'pinterest-import-hints' });
+    hints.createEl('p', { cls: 'pinterest-import-hint', text: t('supportedFileTypesHint') });
+    hints.createEl('p', { cls: 'pinterest-import-hint', text: t('syncPhotosHint') });
   }
   onClose(): void { this.controller.closed(this); this.contentEl.empty(); }
 }

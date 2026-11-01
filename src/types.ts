@@ -19,15 +19,17 @@ export interface CanvasData {
 }
 
 export interface Settings {
+  settingsVersion: 1;
   language: Language;
   showCaptionBar: boolean;
   showAssetFolder: boolean;
-  defaultColumnCount: ColumnCount;
+  columnCount: ColumnCount;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
+  settingsVersion: 1,
   language: DEFAULT_LANGUAGE,
   showCaptionBar: true,
   showAssetFolder: false,
-  defaultColumnCount: 4,
+  columnCount: 4,
 };

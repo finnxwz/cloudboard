@@ -45,6 +45,11 @@ async function openBoard(board: BoardData, options: BoardViewOptions = { showCap
   return { view, file, app, actions };
 }
 
+function enterEditMode(view: ImageBoardView): void {
+  const button = view.contentEl.querySelector<HTMLButtonElement>('.pinterest-board-edit-mode')!;
+  if (button.getAttribute('aria-pressed') !== 'true') button.click();
+}
+
 describe('actual board view rendering', () => {
   it.each([
     ['en', 'Add image', 'Edit caption'],
@@ -58,6 +63,7 @@ describe('actual board view rendering', () => {
     const { view, app } = await openBoard(board);
     setLanguage(language as Language);
     view.applySettings();
+    enterEditMode(view);
     expect(view.contentEl.querySelector('.pinterest-board-add-label')!.textContent).toBe(addLabel);
     expect(view.contentEl.querySelector('.pinterest-board-edit')!.getAttribute('aria-label')).toBe(editLabel);
     expect(view.contentEl.querySelector('.pinterest-board-card-title')!.textContent).toBe('My own caption');
@@ -238,28 +244,51 @@ describe('actual board view rendering', () => {
     expect(view.canAcceptExtension('pboard')).toBe(true);
     expect(view.canAcceptExtension('canvas')).toBe(false);
     expect(view.contentEl.querySelectorAll('.pinterest-board-column')).toHaveLength(4);
+    expect(view.contentEl.querySelector<HTMLButtonElement>('.pinterest-board-edit-mode')!.getAttribute('aria-pressed')).toBe('true');
     const buttons = view.contentEl.querySelectorAll<HTMLButtonElement>('.pinterest-board-add');
     expect(buttons).toHaveLength(4);
     expect(view.contentEl.querySelectorAll('[data-icon="plus"]')).toHaveLength(4);
     buttons[2]!.click();
     expect(actions.add).toHaveBeenCalledWith(file, 2);
+    view.contentEl.querySelector<HTMLButtonElement>('.pinterest-board-edit-mode')!.click();
+    expect(view.contentEl.querySelectorAll('.pinterest-board-add')).toHaveLength(0);
     expect(view.contentEl.querySelector('.canvas-wrapper')).toBeNull();
   });
 
-  it('renders two to five columns and persists the selected count per board', async () => {
-    const two = createBoardData('Two', 2);
-    const openedTwo = await openBoard(two);
-    expect(openedTwo.view.contentEl.querySelectorAll('.pinterest-board-column')).toHaveLength(2);
-    expect(openedTwo.view.contentEl.querySelector('.pinterest-board-grid')?.getAttribute('aria-label')).toContain('2');
+  it('applies the global two-to-five column setting without a selector inside the board', async () => {
+    const options: BoardViewOptions = { showCaptionBar: true, columnCount: 2 };
+    const { view, actions, file } = await openBoard(createBoardData('Board'), options);
+    expect(view.contentEl.querySelectorAll('.pinterest-board-column')).toHaveLength(2);
+    expect(view.contentEl.querySelector('.pinterest-board-grid')?.hasAttribute('aria-label')).toBe(false);
+    expect(view.contentEl.querySelector('.pinterest-board-column-control')).toBeNull();
+    expect(actions.columns).toHaveBeenCalledWith(file, 2);
 
-    const five = createBoardData('Five', 5);
-    const { view, actions, file } = await openBoard(five);
+    options.columnCount = 5;
+    view.applySettings();
     expect(view.contentEl.querySelectorAll('.pinterest-board-column')).toHaveLength(5);
-    const select = view.contentEl.querySelector<HTMLSelectElement>('.pinterest-board-column-control select')!;
-    expect(select.value).toBe('5');
-    select.value = '3';
-    select.dispatchEvent(new Event('change'));
-    await vi.waitFor(() => expect(actions.columns).toHaveBeenCalledWith(file, 3));
+    await vi.waitFor(() => expect(actions.columns).toHaveBeenCalledWith(file, 5));
+  });
+
+  it('shows the instructional sentence only while editing', async () => {
+    const options: BoardViewOptions = { showCaptionBar: true };
+    const board = addBoardCards(createBoardData('Board'), [
+      { id: 'a', column: 0, kind: 'remote', url: 'https://example.org/a.jpg', title: 'Photo' },
+    ]);
+    const { view } = await openBoard(board, options);
+    expect(view.contentEl.querySelector('.pinterest-board-subtitle')).toBeNull();
+    enterEditMode(view);
+    expect(view.contentEl.querySelector('.pinterest-board-subtitle')).not.toBeNull();
+    view.contentEl.querySelector<HTMLButtonElement>('.pinterest-board-edit-mode')!.click();
+    expect(view.contentEl.querySelector('.pinterest-board-subtitle')).toBeNull();
+  });
+
+  it('opens populated boards in clean viewing mode without add cards', async () => {
+    const board = addBoardCards(createBoardData('Board'), [
+      { id: 'a', column: 0, kind: 'remote', url: 'https://example.org/a.jpg', title: 'Photo' },
+    ]);
+    const { view } = await openBoard(board);
+    expect(view.contentEl.querySelector<HTMLButtonElement>('.pinterest-board-edit-mode')!.getAttribute('aria-pressed')).toBe('false');
+    expect(view.contentEl.querySelectorAll('.pinterest-board-add')).toHaveLength(0);
   });
 
   it('renders local and online images in their selected columns and keeps plus slots', async () => {
@@ -268,6 +297,7 @@ describe('actual board view rendering', () => {
       { id: 'b', column: 3, kind: 'remote', url: 'https://i.pinimg.com/a.jpg', title: '<script>unsafe</script>' },
     ]);
     const { view } = await openBoard(board);
+    enterEditMode(view);
     const columns = view.contentEl.querySelectorAll('.pinterest-board-column');
     expect(columns[0]!.querySelectorAll('article')).toHaveLength(0);
     expect(columns[1]!.querySelector('img')?.getAttribute('src')).toBe('app://local/Photos/a.jpg');
@@ -282,6 +312,7 @@ describe('actual board view rendering', () => {
       { id: 'a', column: 0, kind: 'remote', url: 'https://i.pinimg.com/gone.jpg', title: 'Photo' },
     ]);
     const { view } = await openBoard(board);
+    enterEditMode(view);
     const image = view.contentEl.querySelector('img')!;
     image.dispatchEvent(new Event('error'));
     expect(image.hidden).toBe(true);

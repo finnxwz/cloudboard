@@ -1,5 +1,6 @@
 import { FileView, Modal, Notice, TFile, setIcon, type App, type TAbstractFile, type WorkspaceLeaf } from 'obsidian';
-import { BOARD_VIEW_TYPE, isBoardExtension, parseBoard, type BoardCard, type BoardData, type ColumnCount } from './board-data';
+import { BOARD_VIEW_TYPE, DEFAULT_COLUMN_COUNT, isBoardExtension, parseBoard, updateBoardColumns,
+  type BoardCard, type BoardData, type ColumnCount } from './board-data';
 import { imageUrl } from './image-links';
 import { t } from './i18n';
 
@@ -18,7 +19,10 @@ interface CardDrag {
   touchId?: number;
 }
 
-export interface BoardViewOptions { showCaptionBar: boolean; defaultColumnCount?: ColumnCount }
+export interface BoardViewOptions {
+  showCaptionBar: boolean;
+  columnCount?: ColumnCount;
+}
 
 interface DropTarget { column: number; beforeId: string | null }
 
@@ -28,6 +32,7 @@ export class ImageBoardView extends FileView {
   private drag: CardDrag | null = null;
   private dropTarget: DropTarget | null = null;
   private moving = false;
+  private editing = false;
   private cancelTouchHold: (() => void) | null = null;
   private suppressPreviewUntil = 0;
 
@@ -60,22 +65,46 @@ export class ImageBoardView extends FileView {
   getIcon(): string { return 'images'; }
   getDisplayText(): string { return this.file?.basename ?? t('board'); }
   canAcceptExtension(extension: string): boolean { return isBoardExtension(extension); }
-  applySettings(): void { this.render(); }
+  applySettings(): void {
+    const board = this.board;
+    const file = this.file;
+    const columns = this.getOptions().columnCount ?? DEFAULT_COLUMN_COUNT;
+    if (!board || !file || board.columns === columns) { this.render(); return; }
+    this.board = updateBoardColumns(board, columns);
+    this.render();
+    void this.actions.columns(file, columns).catch(error => {
+      new Notice(t('columnChangeFailed', { error: error instanceof Error ? error.message : String(error) }));
+      if (this.file === file) void this.refresh(file);
+    });
+  }
 
   async onLoadFile(file: TFile): Promise<void> { await this.refresh(file); }
   async onUnloadFile(): Promise<void> {
     this.clearDrag();
     this.revision++;
     this.board = null;
+    this.editing = false;
     this.contentEl.empty();
   }
   async onRename(): Promise<void> { if (this.file) await this.refresh(this.file); }
 
   async refresh(file: TFile): Promise<void> {
     const revision = ++this.revision;
+    const openingEmptyBoard = this.board === null;
     try {
-      const board = parseBoard(await this.app.vault.read(file));
+      let board = parseBoard(await this.app.vault.read(file));
       if (revision !== this.revision || this.file !== file) return;
+      const columns = this.getOptions().columnCount ?? DEFAULT_COLUMN_COUNT;
+      if (board.columns !== columns) {
+        try {
+          await this.actions.columns(file, columns);
+          board = updateBoardColumns(board, columns);
+        } catch (error) {
+          new Notice(t('columnChangeFailed', { error: error instanceof Error ? error.message : String(error) }));
+        }
+      }
+      if (revision !== this.revision || this.file !== file) return;
+      if (openingEmptyBoard && board.cards.length === 0) this.editing = true;
       this.board = board;
       this.render();
     } catch (error) {
@@ -100,27 +129,19 @@ export class ImageBoardView extends FileView {
     const header = this.contentEl.createDiv({ cls: 'pinterest-board-header' });
     const headerMain = header.createDiv({ cls: 'pinterest-board-header-main' });
     headerMain.createEl('h1', { text: file.basename });
-    const columnControl = headerMain.createEl('label', { cls: 'pinterest-board-column-control' });
-    columnControl.createSpan({ text: t('columnCount') });
-    const columnSelect = columnControl.createEl('select', { attr: { 'aria-label': t('columnCount') } });
-    for (let count = 2; count <= 5; count++) {
-      const option = columnSelect.createEl('option', { text: String(count), attr: { value: String(count) } });
-      option.selected = count === board.columns;
+    const editMode = headerMain.createEl('button', { cls: 'pinterest-board-edit-mode', attr: {
+      type: 'button',
+      'aria-label': this.editing ? t('finishEditing') : t('editBoard'),
+      title: this.editing ? t('finishEditing') : t('editBoard'),
+      'aria-pressed': String(this.editing),
+    } });
+    setIcon(editMode, this.editing ? 'check' : 'pencil');
+    editMode.addEventListener('click', () => { this.editing = !this.editing; this.render(); });
+    if (this.editing) {
+      header.createEl('p', { text: t('boardSubtitle'), cls: 'pinterest-board-subtitle' });
     }
-    columnSelect.addEventListener('change', async () => {
-      const columns = Number(columnSelect.value) as ColumnCount;
-      columnSelect.disabled = true;
-      try {
-        await this.actions.columns(file, columns);
-        if (this.file === file) await this.refresh(file);
-      } catch (error) {
-        columnSelect.value = String(board.columns);
-        new Notice(t('columnChangeFailed', { error: error instanceof Error ? error.message : String(error) }));
-      } finally { columnSelect.disabled = false; }
-    });
-    header.createEl('p', { text: t('boardSubtitle'), cls: 'pinterest-board-subtitle' });
     const scroll = this.contentEl.createDiv({ cls: 'pinterest-board-scroll' });
-    const grid = scroll.createDiv({ cls: 'pinterest-board-grid', attr: { 'aria-label': t('boardColumns', { count: board.columns }) } });
+    const grid = scroll.createDiv({ cls: 'pinterest-board-grid' });
     grid.style.setProperty('--cloudboard-column-count', String(board.columns));
     grid.style.minWidth = `${board.columns * 170}px`;
     grid.style.maxWidth = `${Math.min(1440, board.columns * 360)}px`;
@@ -144,14 +165,16 @@ export class ImageBoardView extends FileView {
         void this.finishDrag();
       });
       for (const card of board.cards.filter(item => item.column === column)) this.renderCard(stack, card, file);
-      const add = stack.createEl('button', {
-        cls: 'pinterest-board-add',
-        attr: { type: 'button', 'aria-label': t('addInColumn', { number: column + 1 }) },
-      });
-      const plus = add.createSpan({ cls: 'pinterest-board-add-icon', attr: { 'aria-hidden': 'true' } });
-      setIcon(plus, 'plus');
-      add.createSpan({ cls: 'pinterest-board-add-label', text: t('addImage') });
-      add.addEventListener('click', () => this.actions.add(file, column));
+      if (this.editing) {
+        const add = stack.createEl('button', {
+          cls: 'pinterest-board-add',
+          attr: { type: 'button', 'aria-label': t('addInColumn', { number: column + 1 }) },
+        });
+        const plus = add.createSpan({ cls: 'pinterest-board-add-icon', attr: { 'aria-hidden': 'true' } });
+        setIcon(plus, 'plus');
+        add.createSpan({ cls: 'pinterest-board-add-label', text: t('addImage') });
+        add.addEventListener('click', () => this.actions.add(file, column));
+      }
     }
     scroll.scrollLeft = scrollLeft;
     this.contentEl.scrollTop = scrollTop;
@@ -368,7 +391,7 @@ export class EditCaptionModal extends Modal {
     const buttons = form.createDiv({ cls: 'pinterest-board-choices' });
     const cancel = buttons.createEl('button', { text: t('cancel'), attr: { type: 'button' } });
     cancel.addEventListener('click', () => this.close());
-    const save = buttons.createEl('button', { text: t('save'), cls: 'mod-cta', attr: { type: 'submit' } });
+    const save = buttons.createEl('button', { text: t('save'), attr: { type: 'submit' } });
     let busy = false;
     form.addEventListener('submit', async event => {
       event.preventDefault();
